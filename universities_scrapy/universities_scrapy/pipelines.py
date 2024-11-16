@@ -7,6 +7,12 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 
+class BooksScrapyPipeline:
+    def process_item(self, item, spider):
+        adapter = ItemAdapter(item)
+        adapter['price'] = adapter['price'].replace('£', '')
+        return item
+
 
 class UniversitiesScrapyPipeline:
     def process_item(self, item, spider):
