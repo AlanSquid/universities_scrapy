@@ -430,6 +430,15 @@ wheels = [
 ]
 
 [[package]]
+name = "scrapy-splash"
+version = "0.9.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/37/91/cf3e0031010ec844dab378699e8ab0d572333a28dfd57d576260f6a362da/scrapy-splash-0.9.0.tar.gz", hash = "sha256:ecf130264dc08e0c461c8607ecad777468a64ad01dedb2629c0f81bd5fcd7295", size = 59634 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/0e/dc721991fd737e3748667a55ad1ffed068929b8ae479c11510a5482d808d/scrapy_splash-0.9.0-py2.py3-none-any.whl", hash = "sha256:1dc8f8a1c4c4e4341b73987d28c17f82f6a5afeaf585f23449c695e5dcfd8b39", size = 27227 },
+]
+
+[[package]]
 name = "service-identity"
 version = "24.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -451,6 +460,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c8/db/722a42ffdc226e950c4757b3da7b56ff5c090bb265dccd707f7b8a3c6fee/setuptools-75.5.0.tar.gz", hash = "sha256:5c4ccb41111392671f02bb5f8436dfc5a9a7185e80500531b133f5775c4163ef", size = 1336032 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fe/df/88ccbee85aefbca071db004fdc8f8d2507d55d5a9dc27ebb93c92edb1bd8/setuptools-75.5.0-py3-none-any.whl", hash = "sha256:87cb777c3b96d638ca02031192d40390e0ad97737e27b6b4fa831bea86f2f829", size = 1222710 },
+]
+
+[[package]]
+name = "six"
+version = "1.16.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/71/39/171f1c67cd00715f190ba0b100d606d440a28c93c7714febeca8b79af85e/six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926", size = 34041 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254", size = 11053 },
 ]
 
 [[package]]
@@ -501,10 +519,22 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "scrapy" },
+    { name = "scrapy-splash" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "six" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "scrapy", specifier = ">=2.11.2" }]
+requires-dist = [
+    { name = "scrapy", specifier = ">=2.11.2" },
+    { name = "scrapy-splash", specifier = ">=0.9.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "six", specifier = ">=1.16.0" }]
 
 [[package]]
 name = "urllib3"
