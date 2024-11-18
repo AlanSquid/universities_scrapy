@@ -7,6 +7,10 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 BOT_NAME = "universities_scrapy"
 
 SPIDER_MODULES = ["universities_scrapy.spiders"]
@@ -29,29 +33,20 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
 ITEM_PIPELINES = {
-    'universities_scrapy.pipelines.BooksScrapyPipeline': 300,
+    'universities_scrapy.pipelines.UniversitiesScrapyPipeline': 300,
 }
 
-# Splash Server Endpoint
-SPLASH_URL = 'http://localhost:8050'
 
+# Selenium 配置
+from shutil import which
+SELENIUM_DRIVER_NAME = 'chrome'
+SELENIUM_DRIVER_EXECUTABLE_PATH = os.environ.get('CHROMEDRIVER_PATH') 
+SELENIUM_DRIVER_ARGUMENTS = ['--headless']
 
-# Enable Splash downloader middleware and change HttpCompressionMiddleware priority
+# Import SeleniumMiddleware
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy.downloadermiddlewares.offsite.OffsiteMiddleware': None,
-    'scrapy_splash.SplashCookiesMiddleware': 723,
-    'scrapy_splash.SplashMiddleware': 725,
-    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
+    'scrapy_selenium.SeleniumMiddleware': 800,
 }
-
-# Enable Splash Deduplicate Args Filter
-SPIDER_MIDDLEWARES = {
-    'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
-}
-
-# Define the Splash DupeFilter
-DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
-HTTPCACHE_STORAGE = 'scrapy_splash.SplashAwareFSCacheStorage'
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32

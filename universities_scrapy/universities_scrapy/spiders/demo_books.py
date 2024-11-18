@@ -1,9 +1,9 @@
 import scrapy
-from universities_scrapy.items import BooksScrapyItem
+from universities_scrapy.items import BookScrapyItem
 
 
 class BooksSpider(scrapy.Spider):
-    name = "books"
+    name = "demo_books"
     allowed_domains = ["books.toscrape.com"]
     start_urls = ["https://books.toscrape.com/"]
 
@@ -20,7 +20,7 @@ class BooksSpider(scrapy.Spider):
     def parse(self, response):
         products = response.css('article.product_pod')
         for product in products:
-            item = BooksScrapyItem()
+            item = BookScrapyItem()
             item['title'] = product.css('h3 a::attr(title)').get()
             item['price'] = product.css('div.product_price p.price_color::text').get()
             yield item
