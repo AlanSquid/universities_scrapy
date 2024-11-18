@@ -5,11 +5,15 @@
 
 import scrapy
 
-class BooksScrapyItem(scrapy.Item):
+class BookScrapyItem(scrapy.Item):
     title = scrapy.Field()
     price = scrapy.Field()
+    
 
-class UniversitiesScrapyItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class UniversityScrapyItem(scrapy.Item):
+    name = scrapy.Field()
+    ch_name = scrapy.Field()
+    course = scrapy.Field()
+    tuition_fee = scrapy.Field()
+    english_requirement = scrapy.Field()
+    location = scrapy.Field()
