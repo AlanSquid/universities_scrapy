@@ -9,7 +9,7 @@ from selenium.common.exceptions import TimeoutException
 
 
 class GriffithSpider(scrapy.Spider):
-    name = "griffith"
+    name = "griffith_spider"
     allowed_domains = ["www.griffith.edu.au"]
     start_urls = ["https://www.griffith.edu.au/"]
 
@@ -34,46 +34,49 @@ class GriffithSpider(scrapy.Spider):
 
         for card in cards:
             # 提取每個卡片的連結
-            degree_link = card.css("div.degree-link-wrapper p.degree a::attr(href)").get()
-            if degree_link:
+            course_link = card.css("div.degree-link-wrapper p.degree a::attr(href)").get()
+            if course_link:
                 # 確保鏈接是完整的URL
-                full_link = response.urljoin(degree_link)
+                full_link = response.urljoin(course_link)
 
-                degree_name = card.css("div.degree-link-wrapper p.degree a::text").get().strip()
+                course_name = card.css("div.degree-link-wrapper p.degree a::text").get().strip()
 
                 driver.get(full_link)  # 確保獲取最新的頁面
 
-                print(f"Waiting for element on {full_link}")
+                # print(f"Waiting for element on {full_link}")
                 try:
                     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "dt.info-group-title.campus + div dd")))
-                    print("Element found!")
                 except TimeoutException:
                     print("Element not found for this card.")
                     continue  # 如果元素未找到，跳過當前卡片
 
                 #取得校區
-                campus_elements = driver.find_elements(By.CSS_SELECTOR, "dt.info-group-title.campus + div dd")
-                campus = ', '.join([element.text.strip() for element in campus_elements]) if campus_elements else "N/A"               
+                location_elements = driver.find_elements(By.CSS_SELECTOR, "dt.info-group-title.campus + div dd")
+                location_format = ', '.join([element.text.strip() for element in location_elements]) if location_elements else None               
                 
                 #取得ielts要求
-                ielts_info = driver.find_element(By.CSS_SELECTOR, "dl.info-group.entry-requirement-group dd .badge").text.strip() if driver.find_elements(By.CSS_SELECTOR, "dl.info-group.entry-requirement-group dd .badge") else "N/A"
-                english_requirement = ielts_info.replace('\n', ' ') if ielts_info != "N/A" else "N/A"
+                english_requirement_element = driver.find_elements(By.CSS_SELECTOR, "dl.info-group.entry-requirement-group dd .badge")
+                english_requirement = driver.find_element(By.CSS_SELECTOR, "dl.info-group.entry-requirement-group dd .badge").text.strip() if english_requirement_element else None
+                english_requirement_format = english_requirement.replace('\n', ' ') if english_requirement else None
                 
                 # 取得學費
-                tuition_fee = driver.find_element(By.CSS_SELECTOR, "dl.fee-group dd").text.strip() if driver.find_elements(By.CSS_SELECTOR, "dl.fee-group dd") else "N/A"
-                tuition_fee = tuition_fee.replace('$', '').replace(' per year', '').replace(',', '').strip() if tuition_fee != "N/A" else "N/A"
-                
-                
-                # 把資料存入 Item
-                item = UniversityScrapyItem()
-                item['name'] = 'Griffith University'
-                item['ch_name'] = '格里菲斯大學'
-                item['course'] = degree_name  
-                item['tuition_fee'] = tuition_fee
-                item['location'] = campus
-                item['english_requirement'] = english_requirement
+                tuition_fee_element = driver.find_elements(By.CSS_SELECTOR, "dl.fee-group dd")
+                tuition_fee = driver.find_element(By.CSS_SELECTOR, "dl.fee-group dd").text.strip() if tuition_fee_element else None
+                tuition_fee_format = tuition_fee.replace('$', '').replace(' per year', '').replace(',', '').strip() if tuition_fee else None
+               
+                # 把資料存入 university Item
+                university = UniversityScrapyItem()
+                university['name'] = 'Griffith University'
+                university['ch_name'] = '格里菲斯大學'
+                university['course'] = course_name  
+                university['tuition_fee'] = tuition_fee_format
+                university['english_requirement'] = english_requirement_format
+                university['location'] = location_format
+                university['course_url'] = full_link
 
-                yield item
+                yield university
+                
+            print(f'Griffith University 爬蟲完成!')
 
 
     def scroll_to_bottom(self, driver):
