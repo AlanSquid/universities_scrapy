@@ -48,6 +48,8 @@ DOWNLOADER_MIDDLEWARES = {
     'scrapy_selenium.SeleniumMiddleware': 800,
 }
 
+CURRENT_YEAR = 2024   # 調用方式 self.settings.get('CURRENT_YEAR')
+
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 

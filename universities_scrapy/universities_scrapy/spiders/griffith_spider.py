@@ -51,8 +51,8 @@ class GriffithSpider(scrapy.Spider):
                     continue  # 如果元素未找到，跳過當前卡片
 
                 #取得校區
-                location_elements = driver.find_elements(By.CSS_SELECTOR, "dt.info-group-title.campus + div dd")
-                location_format = ', '.join([element.text.strip() for element in location_elements]) if location_elements else None               
+                location_list = driver.find_elements(By.CSS_SELECTOR, "dt.info-group-title.campus + div dd")
+                location_format = ', '.join([element.text.strip() for element in location_list]) if location_list else None               
                 
                 #取得ielts要求
                 english_requirement_element = driver.find_elements(By.CSS_SELECTOR, "dl.info-group.entry-requirement-group dd .badge")
@@ -76,7 +76,7 @@ class GriffithSpider(scrapy.Spider):
 
                 yield university
                 
-            print(f'Griffith University 爬蟲完成!')
+        print(f'Griffith University 爬蟲完成!')
 
 
     def scroll_to_bottom(self, driver):
