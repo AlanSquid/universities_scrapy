@@ -16,7 +16,7 @@ BOT_NAME = "universities_scrapy"
 SPIDER_MODULES = ["universities_scrapy.spiders"]
 NEWSPIDER_MODULE = "universities_scrapy.spiders"
 
-
+LOG_LEVEL = 'WARNING'  # 或 'ERROR'
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "universities_scrapy (+http://www.yourdomain.com)"
 
