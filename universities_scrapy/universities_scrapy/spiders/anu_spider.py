@@ -54,7 +54,7 @@ class AnuSpiderSpider(scrapy.Spider):
         university = UniversityScrapyItem()
         university['name'] = 'Australian National University'
         university['ch_name'] = '澳洲國立大學'
-        university['course'] = course_name
+        university['course_name'] = course_name
         university['course_url'] = response.url
         university['tuition_fee'] = tuition_fee
         university['english_requirement'] = self.english_requirement
