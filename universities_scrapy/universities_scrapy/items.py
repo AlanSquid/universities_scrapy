@@ -14,7 +14,7 @@ class UniversityScrapyItem(scrapy.Item):
     # 前五個最重要
     name = scrapy.Field() # 學校英文名稱
     ch_name = scrapy.Field() # 學校中文名稱
-    course = scrapy.Field() # 課程(科系)名稱
+    course_name = scrapy.Field() # 課程(科系)名稱
     tuition_fee = scrapy.Field() # 年度學費
     location = scrapy.Field() # 校區
     
