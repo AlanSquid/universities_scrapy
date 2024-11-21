@@ -47,9 +47,6 @@ class EcuSpiderSpider(scrapy.Spider):
         
         # 提取card裡面的url
         for bachelor_card in bachelor_cards:
-        # for index, bachelor_card in enumerate(bachelor_cards):
-        #     if index >= 20:
-        #         break
             course_url = bachelor_card.css('a::attr(href)').get()
 
             # 進入課程頁面
@@ -59,8 +56,8 @@ class EcuSpiderSpider(scrapy.Spider):
     def parse_course_detail(self, response):
         if response.css('#feesScholarshipsInt').get():
             # 取得課程名稱
-            course_raw = response.css('h1.heading-l::text').get().strip()
-            course = course_raw.replace('Bachelor of ', '')
+            course_name = response.css('h1.heading-l::text').get().strip()
+
             
             # 取得學費
             tuition_fee_raw = response.css('#feesScholarshipsInt ul li strong::text').get()
@@ -108,7 +105,7 @@ class EcuSpiderSpider(scrapy.Spider):
             university = UniversityScrapyItem()
             university['name'] = 'Edith Cowan University'
             university['ch_name'] = '伊迪斯科文大學'
-            university['course_name'] = course
+            university['course_name'] = course_name
             university['tuition_fee'] = tuition_fee
             university['location'] = location
             university['english_requirement'] = english_requirement
