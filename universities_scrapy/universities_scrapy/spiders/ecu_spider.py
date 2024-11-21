@@ -179,7 +179,7 @@ class EcuSpiderSpider(scrapy.Spider):
         university = UniversityScrapyItem()
         university['name'] = 'Edith Cowan University'
         university['ch_name'] = '伊迪斯科文大學'
-        university['course'] = course
+        university['course_name'] = course
         university['tuition_fee'] = tuition_fee
         university['location'] = location
         university['english_requirement'] = 'IELTS Academic: 6.0'
