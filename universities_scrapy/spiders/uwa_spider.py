@@ -42,7 +42,11 @@ class UwaSpider(scrapy.Spider):
         ).get()
         if fee_2025:
             fee_2025 = fee_2025.strip()
-            fee_2025 = fee_2025.replace('$', '').replace(',', '')
+            fee_2025 = float(fee_2025.replace('$', '').replace(',', ''))
+            if fee_2025.is_integer():
+                fee_2025 = int(fee_2025)  # 沒有小數部分，轉換為整數
+            else:
+                fee_2025 = round(fee_2025, 2)  # 有小數部分，保留兩位小數
 
         # 提取 "English competency" 部分的所有段落
         admission_requirement = response.css('div#admission-requirements')
@@ -57,7 +61,6 @@ class UwaSpider(scrapy.Spider):
             r"a minimum (\d+\.?\d*) in the reading and writing bands, and a minimum score of (\d+\.?\d*) "
             r"in the listening and speaking bands(?:\s*For more information visit.*)?"
         )
-
         # 確保 full_text 不是 None
         if full_text:
             match = pattern.search(full_text)
@@ -80,12 +83,17 @@ class UwaSpider(scrapy.Spider):
         else:
             target_paragraph = None
 
-        # 取得校區 (原本在各科系內頁取得校區，但有些科系內頁沒寫，只寫在搜尋頁)
-        # course_details = response.css('div#course-details')
-        # locations_div = course_details.css('div.card-details-label:contains("Locations") + div.card-details-value ul.default-list li::text').getall()
-        # locations = list(set(locations_div))
-        # locations = ', '.join(locations)
-
+        # 取得duration
+        course_details = response.css('div#course-details')
+        duration_info = course_details.css('div.course-detail.card').xpath(
+            './/h3[contains(text(), "Quick details")]/following-sibling::div[@class="card-container"]'
+            '//div[@class="card-details-label" and text()="Full time/part time duration"]/following-sibling::div//ul/li/text()'
+        ).getall()
+        if not duration_info:
+            duration = None  
+        else:
+            duration = "; ".join([d.replace('\n', '').strip() for d in duration_info])
+     
         # 把資料存入 university Item
         university = UniversityScrapyItem()
         university['name'] = 'University of Western Australia'
@@ -93,11 +101,11 @@ class UwaSpider(scrapy.Spider):
         university['course_name'] = response.meta.get('course_name')
         university['tuition_fee'] = fee_2025
         university['location'] =  response.meta.get('location')
-        university['course_url'] = response.url
         university['english_requirement'] = target_paragraph
+        university['duration'] = duration
+        university['course_url'] = response.url
 
         yield university
 
     def closed(self, reason):    
-        print(f'結束爬蟲')
-        
+        print('University of Western Australia 爬蟲完成!')        

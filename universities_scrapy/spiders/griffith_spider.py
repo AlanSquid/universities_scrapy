@@ -3,9 +3,10 @@ from scrapy_selenium import SeleniumRequest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import time
-from selenium.webdriver.support.ui import WebDriverWait  # 用於設定智能等待機制   會在指定時間內持續檢查條件是否滿足
+from selenium.webdriver.support.ui import WebDriverWait
 from universities_scrapy.items import UniversityScrapyItem  
 from selenium.common.exceptions import TimeoutException 
+import re
 
 
 class GriffithSpider(scrapy.Spider):
@@ -48,30 +49,52 @@ class GriffithSpider(scrapy.Spider):
                     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "dt.info-group-title.campus + div dd")))
                 except TimeoutException:
                     print("Element not found for this card.")
-                    continue  # 如果元素未找到，跳過當前卡片
-
-                #取得校區
-                location_list = driver.find_elements(By.CSS_SELECTOR, "dt.info-group-title.campus + div dd")
-                location_format = ', '.join([element.text.strip() for element in location_list]) if location_list else None               
+                    continue  
                 
+                course_page = scrapy.Selector(text=driver.page_source)
+
+                #取得校區              
+                location_list = course_page.css("dt.info-group-title.campus + div dd::text").getall()
+                location_format = ', '.join([location.strip() for location in location_list]) if location_list else None
+
                 #取得ielts要求
-                english_requirement_element = driver.find_elements(By.CSS_SELECTOR, "dl.info-group.entry-requirement-group dd .badge")
-                english_requirement = driver.find_element(By.CSS_SELECTOR, "dl.info-group.entry-requirement-group dd .badge").text.strip() if english_requirement_element else None
-                english_requirement_format = english_requirement.replace('\n', ' ') if english_requirement else None
+                english_requirement = course_page.css("dl.info-group.entry-requirement-group dd .badge *::text").getall()
+                if english_requirement:
+                    english_requirement = " ".join(english_requirement).strip()  # 合并并去除首尾空格
+                    english_requirement = re.sub(r"\s+", " ", english_requirement)  # 替换多余的空格为单个空格
+                else:
+                    english_requirement = None
                 
                 # 取得學費
-                tuition_fee_element = driver.find_elements(By.CSS_SELECTOR, "dl.fee-group dd")
-                tuition_fee = driver.find_element(By.CSS_SELECTOR, "dl.fee-group dd").text.strip() if tuition_fee_element else None
-                tuition_fee_format = tuition_fee.replace('$', '').replace(' per year', '').replace(',', '').strip() if tuition_fee else None
-               
+                tuition_fee_element = course_page.css("dl.fee-group dd::text").get()
+                tuition_fee = (
+                    int(
+                        tuition_fee_element.replace('$', '')
+                        .replace(' per year', '')
+                        .replace(',', '')
+                        .strip()
+                    )
+                    if tuition_fee_element
+                    else None
+                )
+
+                # 取得duration
+                duration_element = course_page.css("dt.info-group-title.duration + div dd::text").getall()
+                duration_raw = " ".join([d.strip() for d in duration_element]) if duration_element else None
+                if duration_raw:
+                    duration = duration_raw.replace(' years', ' year').replace('\xa0', ' ').strip()
+                else:
+                    duration = None
+
                 # 把資料存入 university Item
                 university = UniversityScrapyItem()
                 university['name'] = 'Griffith University'
                 university['ch_name'] = '格里菲斯大學'
                 university['course_name'] = course_name
-                university['tuition_fee'] = tuition_fee_format
-                university['english_requirement'] = english_requirement_format
+                university['tuition_fee'] = tuition_fee
+                university['english_requirement'] = english_requirement
                 university['location'] = location_format
+                university['duration'] = duration
                 university['course_url'] = full_link
 
                 yield university

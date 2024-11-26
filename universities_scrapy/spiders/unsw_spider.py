@@ -63,7 +63,8 @@ class UnswSpiderSpider(scrapy.Spider):
         tuition_fee = fees_section.css('dt:has(div.cmp-contentfragment__element--internationalAnnual) + dd::text').get()
         if tuition_fee:
             tuition_fee = tuition_fee.replace('$', '').replace(',', '').replace('*', '').strip()
-        
+            tuition_fee = int(tuition_fee)
+
         # 取得區間
         duration = response.css('dt:contains("Duration") + dd::text').get().strip()
 
@@ -107,8 +108,6 @@ class UnswSpiderSpider(scrapy.Spider):
         else:
             print(f"{course_name}的英文格式不匹配，無法解析。{ielts_requirement}")
             english_requirement = None
-
-        print(english_requirement,'ielts_requirement:',ielts_requirement)
         
         university = UniversityScrapyItem()
         university['name'] = 'University of New South Wales'
@@ -128,4 +127,4 @@ class UnswSpiderSpider(scrapy.Spider):
             self.full_link_list.append(course_url)
 
     def closed(self, reason):
-        print('UNSW 爬蟲完成!')
+        print('University of New South Wales 爬蟲完成!')

@@ -59,6 +59,7 @@ class CurtinSpider(scrapy.Spider):
             page = scrapy.Selector(text=driver.page_source)
             course_name = page.css('h1.offering-overview__hero__title::text').get().strip() 
 
+            # 取得校區
             location_dt_elements = page.css("dt")
             for dt in location_dt_elements:
                 if "Location" in dt.css("::text").get():  # 找到 <dt> 包含 "Location"
@@ -71,7 +72,10 @@ class CurtinSpider(scrapy.Spider):
                     if location_format.endswith(','):
                         location_format = location_format[:-1].strip() 
                     break
-
+            # 取得duration
+            duration = response.css("dd.details-duration::text").get().strip()
+            
+            # 取得英文門檻
             english_requirement_format = ""
             english_rows = page.css("div.english-table_row")
             for row in english_rows:
@@ -80,17 +84,19 @@ class CurtinSpider(scrapy.Spider):
                     english_requirement_format = f"IELTS Academic  Overall band score  {cols[1].css('::text').get().strip()}"
                     break
 
-            # 檢查費用
+            # 取得費用
             tuition_fee_format = None
             if page.xpath("//div[contains(@class, 'fees-charges__box') and contains(@class, 'purple')]/p[contains(text(), 'Fee information is not available for this course at this time')]"):
-                print("Fee information is not available for this course.")
+                print(f"{course_name} 沒有費用資訊")
                 tuition_fee_format = None
             elif page.xpath("//h3[text()='International student indicative fees']"):
                 fee_items = page.css("div.fees-charges__item--int")
                 for item in fee_items:
                     if "Indicative year 1 fee" in item.css("h4.fees-charges__fee-title::text").get():
                         tuition_fee_format = ''.join(filter(str.isdigit, item.css("p.fees-charges__fee::text").get().strip()))
+                        tuition_fee_format = int(tuition_fee_format)
                         break
+
    
             university = UniversityScrapyItem()
             university['name'] = 'Curtin University'
@@ -99,6 +105,7 @@ class CurtinSpider(scrapy.Spider):
             university['tuition_fee'] = tuition_fee_format
             university['english_requirement'] = english_requirement_format
             university['location'] = location_format
+            university['duration'] = duration
             university['course_url'] = link
     
             yield university
