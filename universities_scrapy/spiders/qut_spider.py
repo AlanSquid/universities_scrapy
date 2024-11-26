@@ -2,9 +2,6 @@ import re
 import time
 import scrapy
 from scrapy_selenium import SeleniumRequest
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 from universities_scrapy.items import UniversityScrapyItem
 
 class QutSpiderSpider(scrapy.Spider):
@@ -140,6 +137,11 @@ class QutSpiderSpider(scrapy.Spider):
         locations = response.css('ul[data-course-map-key="quickBoxDeliveryINT"] li::text').getall()
         location = ', '.join(locations)
         
+        # 學習時間處理
+        durations = response.css('li[data-course-map-key="quickBoxDurationINTFt"]::text').getall()
+        duration = ', '.join([d.strip() for d in durations])
+        
+        
         # 英文門檻
         english_requirement = ''
         english_requirements = response.css('table#int-elt-table td#elt-overall::text').getall()
@@ -157,8 +159,11 @@ class QutSpiderSpider(scrapy.Spider):
             university['english_requirement'] = f'IELTS (Academic) {english_requirement}'
             university['location'] = location
             university['course_url'] = url
+            university['duration'] = duration
             yield university
 
+    def close(self):
+        print(len(self.seen_urls))
         end_time = time.time()
         elapsed_time = end_time - self.start_time
         print(f'{elapsed_time:.2f}', '秒')
