@@ -94,7 +94,7 @@ class CurtinSpider(scrapy.Spider):
                 for item in fee_items:
                     if "Indicative year 1 fee" in item.css("h4.fees-charges__fee-title::text").get():
                         tuition_fee_format = ''.join(filter(str.isdigit, item.css("p.fees-charges__fee::text").get().strip()))
-                        tuition_fee_format = int(tuition_fee_format)  # 沒有小數部分，轉換為整數
+                        tuition_fee_format = int(tuition_fee_format)
                         break
 
    

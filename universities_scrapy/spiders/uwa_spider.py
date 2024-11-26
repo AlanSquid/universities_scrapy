@@ -108,5 +108,4 @@ class UwaSpider(scrapy.Spider):
         yield university
 
     def closed(self, reason):    
-        print(f'結束爬蟲')
-        
+        print('University of Western Australia 爬蟲完成!')        
