@@ -24,3 +24,4 @@ class UniversityScrapyItem(scrapy.Item):
     english_requirement_url = scrapy.Field() # 英語門檻URL
     academic_requirement_url = scrapy.Field() # 學術門檻URL
     fee_detail_url = scrapy.Field() # 學費詳細資訊URL
+    duration = scrapy.Field() # 學制(期間)
