@@ -7,6 +7,7 @@ class AdelaideSpider(scrapy.Spider):
     allowed_domains = ["www.adelaide.edu.au"]
     base_url = "https://www.adelaide.edu.au"
     start_urls = ["https://www.adelaide.edu.au/degree-finder?v__s=bachelor&m=view&dsn=program.source_program&adv_avail_comm=1&adv_acad_career=0&adv_degree_type=0&adv_atar=0&year=2025&adv_subject=0&adv_career=0&adv_campus=0&adv_mid_year_entry=0"]
+    full_link_list=[]
 
     def parse(self, response):
         links = response.css(
@@ -15,6 +16,7 @@ class AdelaideSpider(scrapy.Spider):
         
         full_links = [self.base_url + link.strip() for link in links if link]
         for link in full_links:
+            self.full_link_list.append(link)
             yield response.follow(link, self.page_parse)
     
     def page_parse(self, response): 
@@ -52,6 +54,7 @@ class AdelaideSpider(scrapy.Spider):
         ielts_overall = english_table.xpath(
             './/table[contains(@class, "df_int_elr_table")]//td[contains(text(), "Overall")]/text()'
         ).get()
+        
         # 如果有找到分數，處理並建立結果
         if ielts_overall:
             english_requirement = f"IELTS {ielts_overall.strip()}"
@@ -70,4 +73,4 @@ class AdelaideSpider(scrapy.Spider):
 
         yield university
     def closed(self, reason):    
-        print('University of Adelaide 爬蟲完成!')        
+        print(f'{self.name}爬蟲完畢\n阿德雷得大學，共{len(self.full_link_list)}筆資料\n')

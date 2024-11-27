@@ -25,7 +25,7 @@ class UwaSpider(scrapy.Spider):
         if next_page is not None:
             yield response.follow(next_page, self.parse)       
         else:
-            print(f'共有 {len(self.full_data)} 筆資料')
+            # print(f'共有 {len(self.full_data)} 筆資料')
             for data in self.full_data:
                 yield response.follow(data['url'], self.page_parse, meta={'location': data['location'],'course_name':data['course_name']})
     
@@ -108,4 +108,4 @@ class UwaSpider(scrapy.Spider):
         yield university
 
     def closed(self, reason):    
-        print('University of Western Australia 爬蟲完成!')        
+        print(f'{self.name}爬蟲完畢\n西澳大學，共{len(self.full_data)}筆資料\n')

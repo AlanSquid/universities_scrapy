@@ -27,7 +27,7 @@ class CurtinSpider(scrapy.Spider):
         if next_page is not None:
             yield response.follow(next_page, self.parse)       
         else:
-            print(f'共有 {len(self.full_link_list)} 筆資料')
+            # print(f'共有 {len(self.full_link_list)} 筆資料')
             for link in self.full_link_list:
                 yield SeleniumRequest(url=link, callback=self.page_parse, meta={'link': link})
 
@@ -49,7 +49,7 @@ class CurtinSpider(scrapy.Spider):
                     driver.execute_script("arguments[0].click();", international_button)
                     wait.until(EC.visibility_of_any_elements_located((By.XPATH, "//h3[text()='International student indicative fees'] | //p[contains(text(), 'Fee information is not available for this course at this time')]")))
             except TimeoutException:
-                print("Element not found for this card.")
+                # print("Element not found for this card.")
                 return  # 結束當前方法，跳過當前卡片
     
             # with open('output.html', 'w', encoding='utf-8') as f:
@@ -81,13 +81,13 @@ class CurtinSpider(scrapy.Spider):
             for row in english_rows:
                 cols = row.css("p")
                 if "Overall band score" in cols[0].css("::text").get():
-                    english_requirement_format = f"IELTS Academic  Overall band score  {cols[1].css('::text').get().strip()}"
+                    english_requirement_format = f"IELTS {cols[1].css('::text').get().strip()}"
                     break
 
             # 取得費用
             tuition_fee_format = None
             if page.xpath("//div[contains(@class, 'fees-charges__box') and contains(@class, 'purple')]/p[contains(text(), 'Fee information is not available for this course at this time')]"):
-                print(f"{course_name} 沒有費用資訊")
+                # print(f"{course_name} 沒有費用資訊")
                 tuition_fee_format = None
             elif page.xpath("//h3[text()='International student indicative fees']"):
                 fee_items = page.css("div.fees-charges__item--int")
@@ -110,4 +110,4 @@ class CurtinSpider(scrapy.Spider):
             yield university
             
     def closed(self, reason):
-        print(f'Curtin University 爬蟲完成!')
+        print(f'{self.name}爬蟲完畢\n科廷大學，共{len(self.full_link_list)}筆資料\n')
