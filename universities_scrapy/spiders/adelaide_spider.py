@@ -57,7 +57,8 @@ class AdelaideSpider(scrapy.Spider):
         
         # 如果有找到分數，處理並建立結果
         if ielts_overall:
-            english_requirement = f"IELTS {ielts_overall.strip()}"
+            overall_score = re.search(r'(\d+(\.\d+)?)', ielts_overall)
+            english_requirement = f"IELTS {overall_score.group(1)}"
         else:
             english_requirement = None
 
