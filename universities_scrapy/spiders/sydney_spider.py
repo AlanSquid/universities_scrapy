@@ -81,7 +81,7 @@ class SydneySpiderSpider(scrapy.Spider):
                 item['ch_name'] = '雪梨大學'
                 item['course_name'] = course['name']
                 item['course_url'] = course['url']
-                item['tuition_fee'] = course_detail['tuition_fee']
+                item['min_tuition_fee'] = course_detail['tuition_fee']
                 item['english_requirement'] = course_detail['english_requirement']
                 item['location'] = course_detail['location']
                 item['duration'] = course_detail['duration']
@@ -138,45 +138,44 @@ class SydneySpiderSpider(scrapy.Spider):
                         break
                     
                 wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-accordion__slide-content.m-accordion--ds__slide-content')))
-                    
-                # 丟給scrapy解析
-                english_requirement = ''
-                admissions_page = scrapy.Selector(text=driver.page_source)
-                
-                english_requirements_list = admissions_page.css('.m-rich-content.m-rich-content--ds table tr')
-                for english_requirement_item in english_requirements_list:
-                    title = english_requirement_item.css('td:nth-of-type(1) strong::text').get()
-                    # 找IELTS的英文門檻
-                    if title and 'IELTS' in title:
-                        english_requirement_raw = english_requirement_item.css('td:nth-child(2)::text').get()
-                        # 格式化文字
-                        english_requirement = self.extract_ielts_requirement_str(english_requirement_raw)
-                        break
-                        
-                # 輸出資訊
-                print(f'課程: {course['name']}')
-                print(f'課程url: {course['url']}')
-                print(f'學費: {tuition_fee}') 
-                print(f'英文門檻: {english_requirement}')
-                print(f'校區: {location}')
-                print(f'學制: {duration}')
-                print(f'\n')
-                
-                # 把資料存入 university Item
-                item = UniversityScrapyItem()
-                item['name'] = 'University of Sydney'
-                item['ch_name'] = '雪梨大學'
-                item['course_name'] = course['name']
-                item['course_url'] = course['url']
-                item['tuition_fee'] = tuition_fee
-                item['english_requirement'] = english_requirement
-                item['location'] = location
-                item['duration'] = duration
-                
-                yield item
-                
             except TimeoutException:
                 print(f'注意!!!\n{course['name']}頁面加載超時: {course['url']}\n')
+            
+            # 丟給scrapy解析
+            english_requirement = None
+            admissions_page = scrapy.Selector(text=driver.page_source)
+            
+            english_requirements_list = admissions_page.css('.m-rich-content.m-rich-content--ds table tr')
+            for english_requirement_item in english_requirements_list:
+                title = english_requirement_item.css('td:nth-of-type(1) strong::text').get()
+                # 找IELTS的英文門檻
+                if title and 'IELTS' in title:
+                    english_requirement_raw = english_requirement_item.css('td:nth-child(2)::text').get()
+                    # 格式化文字
+                    english_requirement = self.extract_ielts_requirement_str(english_requirement_raw)
+                    break
+                    
+            # 輸出資訊
+            print(f'課程: {course['name']}')
+            print(f'課程url: {course['url']}')
+            print(f'學費: {tuition_fee}') 
+            print(f'英文門檻: {english_requirement}')
+            print(f'校區: {location}')
+            print(f'學制: {duration}')
+            print(f'\n')
+            
+            # 把資料存入 university Item
+            item = UniversityScrapyItem()
+            item['name'] = 'University of Sydney'
+            item['ch_name'] = '雪梨大學'
+            item['course_name'] = course['name']
+            item['course_url'] = course['url']
+            item['min_tuition_fee'] = tuition_fee
+            item['english_requirement'] = english_requirement
+            item['location'] = location
+            item['duration'] = duration
+            
+            yield item             
                       
     
     # 判斷href是否有改變
