@@ -102,7 +102,7 @@ class UqSpiderSpider(scrapy.Spider):
         university['name'] = "University of Queensland"
         university['ch_name'] = "昆士蘭大學"
         university['course_name'] = course_name
-        university['tuition_fee'] = tuition_fee
+        university['min_tuition_fee'] = tuition_fee
         university['english_requirement'] = f'{IELTS_grade_result}'
         university['location'] = location
         university['course_url'] = course_url

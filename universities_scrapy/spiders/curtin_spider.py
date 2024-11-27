@@ -94,7 +94,6 @@ class CurtinSpider(scrapy.Spider):
                 for item in fee_items:
                     if "Indicative year 1 fee" in item.css("h4.fees-charges__fee-title::text").get():
                         tuition_fee_format = ''.join(filter(str.isdigit, item.css("p.fees-charges__fee::text").get().strip()))
-                        tuition_fee_format = int(tuition_fee_format)
                         break
 
    
@@ -102,7 +101,7 @@ class CurtinSpider(scrapy.Spider):
             university['name'] = 'Curtin University'
             university['ch_name'] = '科廷大學'
             university['course_name'] = course_name  
-            university['tuition_fee'] = tuition_fee_format
+            university['min_tuition_fee'] = tuition_fee_format
             university['english_requirement'] = english_requirement_format
             university['location'] = location_format
             university['duration'] = duration

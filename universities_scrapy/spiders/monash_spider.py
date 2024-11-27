@@ -178,7 +178,7 @@ class MonashSpiderSpider(scrapy.Spider):
             university['name'] = "Monash University"
             university['ch_name'] = "蒙納許大學"
             university['course_name'] = course_name
-            university['tuition_fee'] = tuition_fee
+            university['min_tuition_fee'] = tuition_fee
             university['english_requirement'] = IELTS_score_result
             university['location'] = location
             university['course_url'] = course_url_international

@@ -63,7 +63,6 @@ class UnswSpiderSpider(scrapy.Spider):
         tuition_fee = fees_section.css('dt:has(div.cmp-contentfragment__element--internationalAnnual) + dd::text').get()
         if tuition_fee:
             tuition_fee = tuition_fee.replace('$', '').replace(',', '').replace('*', '').strip()
-            tuition_fee = int(tuition_fee)
 
         # 取得區間
         duration = response.css('dt:contains("Duration") + dd::text').get().strip()
@@ -113,7 +112,7 @@ class UnswSpiderSpider(scrapy.Spider):
         university['name'] = 'University of New South Wales'
         university['ch_name'] = '新南威爾斯大學'
         university['course_name'] = course_name
-        university['tuition_fee'] = tuition_fee
+        university['min_tuition_fee'] = tuition_fee
         university['english_requirement'] = english_requirement
         university['location'] = location
         university['duration'] = duration
