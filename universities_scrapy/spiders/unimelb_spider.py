@@ -11,6 +11,7 @@ class UnimelbSpiderSpider(scrapy.Spider):
     allowed_domains = ["www.unimelb.edu.au", "study.unimelb.edu.au"]
     start_urls = ["https://study.unimelb.edu.au/find/?collection=find-a-course&profile=_default&query=%21showall&num_ranks=12&start_rank=1&f.Tabs%7CtypeCourse=Courses&f.Study+level%7CcourseStudyLevel=undergraduate"]
     course_detail_urls = []
+    no_international_count = 0
     
     def start_requests(self):
         for url in self.start_urls:
@@ -47,7 +48,7 @@ class UnimelbSpiderSpider(scrapy.Spider):
             )
             
         # 沒有下一頁後開始爬取各課程詳細資訊
-        else:
+        else:      
             for course_url in self.course_detail_urls:
                 driver = response.request.meta['driver']
                 wait = WebDriverWait(driver, 10)
@@ -68,8 +69,11 @@ class UnimelbSpiderSpider(scrapy.Spider):
                 # 取得課程名稱
                 course_name = page.css("#page-header::text").get().strip()
 
-                # 取得學費
-                tuition_fee = ''
+                # 取得學費、學制、英文門檻、校區
+                tuition_fee = None
+                duration = None
+                english_requirement = None
+                location = None
                 info = page.css(".key-facts-section__main")
                 info_items = info.css('.key-facts-section__main--item')
                 for item in info_items:
@@ -84,6 +88,12 @@ class UnimelbSpiderSpider(scrapy.Spider):
                     if 'English' in title:
                         english_requirement_raw = item.css('.key-facts-section__main--value::text').get().strip()
                         english_requirement = self.extract_ielts_requirement(english_requirement_raw)
+                    
+                    if 'Location' in title:
+                        location_raw = item.css('.key-facts-section__main--value::text').get().strip()
+                        match = re.search(r'\((.*?)\)', location_raw)
+                        if match:
+                            location = match.group(1)
                         
                         
                 if tuition_fee:
@@ -95,6 +105,7 @@ class UnimelbSpiderSpider(scrapy.Spider):
                     item['min_tuition_fee'] = tuition_fee[min]
                     item['max_tuition_fee'] = tuition_fee[max]
                     item['english_requirement'] = english_requirement
+                    item['location'] = location
                     item['duration'] = duration
                     item['course_url'] = course_url
                     
@@ -103,9 +114,9 @@ class UnimelbSpiderSpider(scrapy.Spider):
                     
                 # 沒有學費的代表不開放國際生
                 else:
-                    print(f'{course_name}不開放國際生\n{course_url}')
-                    self.course_detail_urls.remove(course_url)
-                
+                    # print(f'{course_name}不開放國際生\n{course_url}')
+                    self.no_international_count += 1
+                    
                           
     # 提取學費範圍或單個金額
     def extract_fee_range(self, fee_string):
@@ -142,4 +153,7 @@ class UnimelbSpiderSpider(scrapy.Spider):
 
         
     def closed(self, reason):
-        print(f'University of Melbourne 爬蟲結束，共{len(self.course_detail_urls)}個課程')
+        print(f'{self.name}爬蟲完成!')
+        print(f'墨爾本大學, 共有 {len(self.course_detail_urls) - self.no_international_count} 筆資料(已排除不支援國際生)')
+        print(f'不支援國際生的共{self.no_international_count}個\n')
+        

@@ -14,7 +14,7 @@ class EcuSpiderSpider(scrapy.Spider):
     allowed_domains = ["www.ecu.edu.au", "myfees.ecu.edu.au"]
     start_urls = ["https://www.ecu.edu.au/degrees/undergraduate"]
     not_found_list = []
-    
+    bachelor_cards = []
     def start_requests(self):
         for url in self.start_urls:
             yield SeleniumRequest(url=url, callback=self.parse)
@@ -37,16 +37,17 @@ class EcuSpiderSpider(scrapy.Spider):
         cards = page.css('.info-card')
         
         # 篩選包含 'Bachelor of' 的卡片
-        bachelor_cards = []
+        titles = set()
         for card in cards:
             title = card.css('a h3.heading-xxs::text').get()
-            if title and 'Bachelor of' in title:
-                bachelor_cards.append(card)
+            if title and 'Bachelor of' in title and title not in titles:
+                self.bachelor_cards.append(card)
+                titles.add(title)
+
         
-        print(f'找到{len(bachelor_cards)}個Bachelor課程')
         
         # 提取card裡面的url
-        for bachelor_card in bachelor_cards:
+        for bachelor_card in self.bachelor_cards:
             course_url = bachelor_card.css('a::attr(href)').get()
 
             # 進入課程頁面
@@ -121,7 +122,7 @@ class EcuSpiderSpider(scrapy.Spider):
             location_raw = response.css('.event-details span:nth-of-type(2)::text').get().strip()
             location = location_raw.replace('Venue:', '').strip().split()[0] + ' ' + location_raw.replace('Venue:', '').strip().split()[1]
             
-            print(f'{course_name}\n{response.url}\n找不到學費資訊可能代表該課程不支持國際生\n')
+            # print(f'{course_name}\n{response.url}\n找不到學費資訊可能代表該課程不支持國際生\n')
 
             course = {}
             course['course_name'] = course_name
@@ -133,8 +134,9 @@ class EcuSpiderSpider(scrapy.Spider):
         
                        
     def closed(self, reason):
-        print(f'Edith Cowan University 爬蟲完成!')
-        print(f'找不到資訊的url共{len(self.not_found_list)}個')
+        print(f'{self.name}爬蟲完成!')
+        print(f'伊迪斯科文大學, 共有 {len(self.bachelor_cards) - len(self.not_found_list)} 筆資料(已排除不支援國際生)')
+        print(f'不支援國際生的共{len(self.not_found_list)}個\n')
         
        
             

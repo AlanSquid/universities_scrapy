@@ -13,6 +13,7 @@ class GriffithSpider(scrapy.Spider):
     name = "griffith_spider"
     allowed_domains = ["www.griffith.edu.au"]
     start_urls = ["https://www.griffith.edu.au/"]
+    
 
     def start_requests(self):
         url = 'https://www.griffith.edu.au/study/degrees?academicCareerCode=ugrd&studentType=international'
@@ -48,7 +49,7 @@ class GriffithSpider(scrapy.Spider):
                 try:
                     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "dt.info-group-title.campus + div dd")))
                 except TimeoutException:
-                    print("Element not found for this card.")
+                    # print("Element not found for this card.")
                     continue  
                 
                 course_page = scrapy.Selector(text=driver.page_source)
@@ -99,7 +100,8 @@ class GriffithSpider(scrapy.Spider):
 
                 yield university
                 
-        print(f'Griffith University 爬蟲完成!')
+        print(f'{self.name}爬蟲完成!')
+        print(f'格里菲斯大學, 共有 {len(cards)} 筆資料\n')
 
 
     def scroll_to_bottom(self, driver):

@@ -66,5 +66,5 @@ class AnuSpiderSpider(scrapy.Spider):
         yield university 
         
     def closed(self, reason):    
-        print(f'Australian National University爬蟲完成!\n共有 {len(self.detail_url_list)} 筆資料')
+        print(f'{self.name}爬蟲完成!\n澳洲國立大學, 共有 {len(self.detail_url_list)} 筆資料\n')
         

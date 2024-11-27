@@ -53,12 +53,12 @@ class SydneySpiderSpider(scrapy.Spider):
                 # 如果沒有下一頁，跳出循環
                 break
 
-        print(f'共有{len(self.course_urls)}個課程連結')
+        # print(f'共有{len(self.course_urls)}個課程連結')
         
         # 爬取課程頁面
         for course in self.course_urls:
             driver.get(course['url'])
-            print(f'正在爬取課程: {course['name']}\n{course['url']}\n')
+            # print(f'正在爬取課程: {course['name']}\n{course['url']}\n')
             wait = WebDriverWait(driver, 10)
             try: 
                 # 等待.m-key-information__list__fees-info元素(資訊欄)加載，如果超時則拋出異常
@@ -67,13 +67,13 @@ class SydneySpiderSpider(scrapy.Spider):
                 # 爬不到資訊欄例外處理
                 course_detail = self.except_course_process(driver)
 
-                print(f'課程: {course['name']}')
-                print(f'課程url: {course['url']}')
-                print(f'學費: {course_detail['tuition_fee']}')
-                print(f'英文門檻: {course_detail['english_requirement']}')
-                print(f'校區: {course_detail['location']}')
-                print(f'學制: {course_detail['duration']}')
-                print('\n')
+                # print(f'課程: {course['name']}')
+                # print(f'課程url: {course['url']}')
+                # print(f'學費: {course_detail['tuition_fee']}')
+                # print(f'英文門檻: {course_detail['english_requirement']}')
+                # print(f'校區: {course_detail['location']}')
+                # print(f'學制: {course_detail['duration']}')
+                # print('\n')
                 
                 # 把資料存入 university Item
                 item = UniversityScrapyItem()
@@ -100,9 +100,6 @@ class SydneySpiderSpider(scrapy.Spider):
             
             # 抓資訊欄
             info = course_page.css('.m-key-information__list')
-            if not info:
-                print(f'注意!!!\n{course['name']}沒有找到.m-key-information__list元素\n{course['url']}\n')
-                continue
         
             # 抓取學費
             tuition_fee_raw = info.css('.m-key-information__list__fees-info .m-key-information__list__right-fees-info-content-list--price::text').get()
@@ -139,7 +136,8 @@ class SydneySpiderSpider(scrapy.Spider):
                     
                 wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-accordion__slide-content.m-accordion--ds__slide-content')))
             except TimeoutException:
-                print(f'注意!!!\n{course['name']}頁面加載超時: {course['url']}\n')
+                # print(f'注意!!!\n{course['name']}頁面加載超時: {course['url']}\n')
+                pass
             
             # 丟給scrapy解析
             english_requirement = None
@@ -156,13 +154,13 @@ class SydneySpiderSpider(scrapy.Spider):
                     break
                     
             # 輸出資訊
-            print(f'課程: {course['name']}')
-            print(f'課程url: {course['url']}')
-            print(f'學費: {tuition_fee}') 
-            print(f'英文門檻: {english_requirement}')
-            print(f'校區: {location}')
-            print(f'學制: {duration}')
-            print(f'\n')
+            # print(f'課程: {course['name']}')
+            # print(f'課程url: {course['url']}')
+            # print(f'學費: {tuition_fee}') 
+            # print(f'英文門檻: {english_requirement}')
+            # print(f'校區: {location}')
+            # print(f'學制: {duration}')
+            # print(f'\n')
             
             # 把資料存入 university Item
             item = UniversityScrapyItem()
@@ -226,10 +224,7 @@ class SydneySpiderSpider(scrapy.Spider):
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-key-information__list__fees-info .m-key-information__list__right-fees-info-content-list')))
             
                
-    # 爬取課程頁面
-    def parse_course_page(self, response):
-        yield print(f'正在爬取課程: {response.url}')
-        
+
     # 提取IELTS英文門檻
     def extract_ielts_requirement_str(self, ielts_string):
         # 使用正則表達式進行替換
@@ -248,7 +243,7 @@ class SydneySpiderSpider(scrapy.Spider):
     
     # 爬不到資訊欄例外處理
     def except_course_process(self, driver):
-        print('正在處理例外情況...')
+        # print('正在處理例外情況...')
         # 選擇身分為國際生
         role_dropdown = driver.find_elements(By.CSS_SELECTOR, '.col-xs-10 .b-dropdown-simple__option-wrapper a')
         for role_option in role_dropdown:
@@ -259,15 +254,15 @@ class SydneySpiderSpider(scrapy.Spider):
         page = scrapy.Selector(text=driver.page_source)
         
         # 抓取學費
+        tuition_fee = None
         tuition_fee_raw = page.css('.dual-title.b-text--bold::text').get()
-        pattern = r":\s*\$([\d,]+)"
-        match = re.search(pattern, tuition_fee_raw)
+        if tuition_fee_raw is not None:
+            pattern = r":\s*\$([\d,]+)"
+            match = re.search(pattern, tuition_fee_raw)
     
-        if match:
-            tuition_fee = match.group(1).replace(',', '')
-            
-        else:
-            tuition_fee = None
+            if match:
+                tuition_fee = match.group(1).replace(',', '')
+
         
         # 抓取英文門檻
         english_requirement_raw = page.css('.b-paragraph.b-box--slightly-transparent.b-box--compact.b-box--mid-grey.b-component--tighter::text').get()
@@ -291,6 +286,7 @@ class SydneySpiderSpider(scrapy.Spider):
         return {'tuition_fee': tuition_fee, 'english_requirement': english_requirement, 'location': location, 'duration': duration}
 
             
-        
+    def closed(self, reason):    
+        print(f'{self.name}爬蟲完成!\n雪梨大學, 共有 {len(self.course_urls)} 筆資料\n')
 
 
