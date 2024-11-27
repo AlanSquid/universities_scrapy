@@ -91,7 +91,7 @@ class GriffithSpider(scrapy.Spider):
                 university['name'] = 'Griffith University'
                 university['ch_name'] = '格里菲斯大學'
                 university['course_name'] = course_name
-                university['tuition_fee'] = tuition_fee
+                university['min_tuition_fee'] = tuition_fee
                 university['english_requirement'] = english_requirement
                 university['location'] = location_format
                 university['duration'] = duration
