@@ -61,8 +61,34 @@ class SydneySpiderSpider(scrapy.Spider):
             print(f'正在爬取課程: {course['name']}\n{course['url']}\n')
             wait = WebDriverWait(driver, 10)
             try:
-                # 等待.m-key-information__list__fees-info元素(資訊欄)加載，如果超時則拋出異常
-                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-key-information__list__fees-info .m-key-information__list__right-fees-info-content')))
+                try: 
+                    # 等待.m-key-information__list__fees-info元素(資訊欄)加載，如果超時則拋出異常
+                    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-key-information__list__fees-info .m-key-information__list__right-fees-info-content')))
+                except TimeoutException:
+                    # 爬不到資訊欄例外處理
+                    course_detail = self.except_course_process(driver)
+
+                    print(f'課程: {course['name']}')
+                    print(f'課程url: {course['url']}')
+                    print(f'學費: {course_detail['tuition_fee']}')
+                    print(f'英文門檻: {course_detail['english_requirement']}')
+                    print(f'校區: {course_detail['location']}')
+                    print(f'學制: {course_detail['duration']}')
+                    print('\n')
+                    
+                    # 把資料存入 university Item
+                    item = UniversityScrapyItem()
+                    item['name'] = 'University of Sydney'
+                    item['ch_name'] = '雪梨大學'
+                    item['course_name'] = course['name']
+                    item['course_url'] = course['url']
+                    item['tuition_fee'] = course_detail['tuition_fee']
+                    item['english_requirement'] = course_detail['english_requirement']
+                    item['location'] = course_detail['location']
+                    item['duration'] = course_detail['duration']
+            
+                    yield item
+                    continue
                 
                 # 處理modal
                 modal = driver.find_element(By.CSS_SELECTOR, '.m-csp-modal-content') if driver.find_elements(By.CSS_SELECTOR, '.m-csp-modal-content') else None
@@ -150,33 +176,7 @@ class SydneySpiderSpider(scrapy.Spider):
                 
             except TimeoutException:
                 print(f'注意!!!\n{course['name']}頁面加載超時: {course['url']}\n')
-                
-                # 爬不到資訊欄例外處理
-                course_detail = self.except_course_process(driver)
-
-                print(f'課程: {course['name']}')
-                print(f'課程url: {course['url']}')
-                print(f'學費: {course_detail['tuition_fee']}')
-                print(f'英文門檻: {course_detail['english_requirement']}')
-                print(f'校區: {course_detail['location']}')
-                print(f'學制: {course_detail['duration']}')
-                print('\n')
-                
-                # 把資料存入 university Item
-                item = UniversityScrapyItem()
-                item['name'] = 'University of Sydney'
-                item['ch_name'] = '雪梨大學'
-                item['course_name'] = course['name']
-                item['course_url'] = course['url']
-                item['tuition_fee'] = course_detail['tuition_fee']
-                item['english_requirement'] = course_detail['english_requirement']
-                item['location'] = course_detail['location']
-                item['duration'] = course_detail['duration']
-        
-                yield item
-                continue
-
-            
+                      
     
     # 判斷href是否有改變
     class href_changes(object):
