@@ -60,74 +60,74 @@ class SydneySpiderSpider(scrapy.Spider):
             driver.get(course['url'])
             print(f'正在爬取課程: {course['name']}\n{course['url']}\n')
             wait = WebDriverWait(driver, 10)
-            try:
-                try: 
-                    # 等待.m-key-information__list__fees-info元素(資訊欄)加載，如果超時則拋出異常
-                    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-key-information__list__fees-info .m-key-information__list__right-fees-info-content')))
-                except TimeoutException:
-                    # 爬不到資訊欄例外處理
-                    course_detail = self.except_course_process(driver)
+            try: 
+                # 等待.m-key-information__list__fees-info元素(資訊欄)加載，如果超時則拋出異常
+                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-key-information__list__fees-info .m-key-information__list__right-fees-info-content')))
+            except TimeoutException:
+                # 爬不到資訊欄例外處理
+                course_detail = self.except_course_process(driver)
 
-                    print(f'課程: {course['name']}')
-                    print(f'課程url: {course['url']}')
-                    print(f'學費: {course_detail['tuition_fee']}')
-                    print(f'英文門檻: {course_detail['english_requirement']}')
-                    print(f'校區: {course_detail['location']}')
-                    print(f'學制: {course_detail['duration']}')
-                    print('\n')
+                print(f'課程: {course['name']}')
+                print(f'課程url: {course['url']}')
+                print(f'學費: {course_detail['tuition_fee']}')
+                print(f'英文門檻: {course_detail['english_requirement']}')
+                print(f'校區: {course_detail['location']}')
+                print(f'學制: {course_detail['duration']}')
+                print('\n')
+                
+                # 把資料存入 university Item
+                item = UniversityScrapyItem()
+                item['name'] = 'University of Sydney'
+                item['ch_name'] = '雪梨大學'
+                item['course_name'] = course['name']
+                item['course_url'] = course['url']
+                item['tuition_fee'] = course_detail['tuition_fee']
+                item['english_requirement'] = course_detail['english_requirement']
+                item['location'] = course_detail['location']
+                item['duration'] = course_detail['duration']
+        
+                yield item
+                continue
+            
+            # 處理modal
+            modal = driver.find_element(By.CSS_SELECTOR, '.m-csp-modal-content') if driver.find_elements(By.CSS_SELECTOR, '.m-csp-modal-content') else None
+            if modal:
+                self.modal_process(driver, wait)
                     
-                    # 把資料存入 university Item
-                    item = UniversityScrapyItem()
-                    item['name'] = 'University of Sydney'
-                    item['ch_name'] = '雪梨大學'
-                    item['course_name'] = course['name']
-                    item['course_url'] = course['url']
-                    item['tuition_fee'] = course_detail['tuition_fee']
-                    item['english_requirement'] = course_detail['english_requirement']
-                    item['location'] = course_detail['location']
-                    item['duration'] = course_detail['duration']
             
-                    yield item
-                    continue
-                
-                # 處理modal
-                modal = driver.find_element(By.CSS_SELECTOR, '.m-csp-modal-content') if driver.find_elements(By.CSS_SELECTOR, '.m-csp-modal-content') else None
-                if modal:
-                    self.modal_process(driver, wait)
-                        
-                
-                # 丟給scrapy解析
-                course_page = scrapy.Selector(text=driver.page_source)
-                
-                # 抓資訊欄
-                info = course_page.css('.m-key-information__list')
-                if not info:
-                    print(f'注意!!!\n{course['name']}沒有找到.m-key-information__list元素\n{course['url']}\n')
-                    continue
+            # 丟給scrapy解析
+            course_page = scrapy.Selector(text=driver.page_source)
             
-                # 抓取學費
-                tuition_fee_raw = info.css('.m-key-information__list__fees-info .m-key-information__list__right-fees-info-content-list--price::text').get()
-                if tuition_fee_raw is not None:
-                    tuition_fee = tuition_fee_raw.strip().replace('A$', '').replace(',', '').replace('*', '')
-                    if tuition_fee == '-':
-                        tuition_fee = None
-                        
-                # 抓校區
-                location = info.css('.m-key-information__list__right-location span::text').get()
-                
-                # 抓學制
-                info_other_list = info.css('.m-key-information__list__other-info')
-                for info_other in info_other_list:
-                    title = info_other.css('.m-key-information__list__left h4::text').get()
-                    if 'Duration' in title:
-                        duration = info_other.css('.m-key-information__list__right :nth-child(1) *::text').get()
-                        
-                # 抓英文門檻
-                # 切換Admissions招生頁面
-                admissions = driver.find_element(By.CSS_SELECTOR, '.m-nav-tabs__button.m-nav-tabs__button--selected')
-                admissions.click()
+            # 抓資訊欄
+            info = course_page.css('.m-key-information__list')
+            if not info:
+                print(f'注意!!!\n{course['name']}沒有找到.m-key-information__list元素\n{course['url']}\n')
+                continue
+        
+            # 抓取學費
+            tuition_fee_raw = info.css('.m-key-information__list__fees-info .m-key-information__list__right-fees-info-content-list--price::text').get()
+            if tuition_fee_raw is not None:
+                tuition_fee = tuition_fee_raw.strip().replace('A$', '').replace(',', '').replace('*', '')
+                if tuition_fee == '-':
+                    tuition_fee = None
+                    
+            # 抓校區
+            location = info.css('.m-key-information__list__right-location span::text').get()
+            
+            # 抓學制
+            info_other_list = info.css('.m-key-information__list__other-info')
+            for info_other in info_other_list:
+                title = info_other.css('.m-key-information__list__left h4::text').get()
+                if 'Duration' in title:
+                    duration = info_other.css('.m-key-information__list__right :nth-child(1) *::text').get()
+                    
+            # 抓英文門檻
+            # 切換Admissions招生頁面
+            admissions = driver.find_element(By.CSS_SELECTOR, '.m-nav-tabs__button.m-nav-tabs__button--selected')
+            admissions.click()
+            try:
                 wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.m-eng-lang-req-list')))
-                
+
                 # 展開選單需點擊'English is NOT my first language'選項
                 eng_req_block = driver.find_element(By.CSS_SELECTOR, '.m-eng-lang-req-list')
                 
@@ -136,46 +136,47 @@ class SydneySpiderSpider(scrapy.Spider):
                     if 'NOT' in dropdown_option.find_element(By.CSS_SELECTOR, '.m-eng-lang-req__title-text.m-grid__cell').get_attribute('textContent'):
                         driver.execute_script("arguments[0].click();", dropdown_option)
                         break
-                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-accordion__slide-content.m-accordion--ds__slide-content')))
                     
-                # 丟給scrapy解析
-                english_requirement = ''
-                admissions_page = scrapy.Selector(text=driver.page_source)
-                
-                english_requirements_list = admissions_page.css('.m-rich-content.m-rich-content--ds table tr')
-                for english_requirement_item in english_requirements_list:
-                    title = english_requirement_item.css('td:nth-of-type(1) strong::text').get()
-                    # 找IELTS的英文門檻
-                    if title and 'IELTS' in title:
-                        english_requirement_raw = english_requirement_item.css('td:nth-child(2)::text').get()
-                        # 格式化文字
-                        english_requirement = self.extract_ielts_requirement_str(english_requirement_raw)
-                        break
-                        
-                # 輸出資訊
-                print(f'課程: {course['name']}')
-                print(f'課程url: {course['url']}')
-                print(f'學費: {tuition_fee}') 
-                print(f'英文門檻: {english_requirement}')
-                print(f'校區: {location}')
-                print(f'學制: {duration}')
-                print(f'\n')
-                
-                # 把資料存入 university Item
-                item = UniversityScrapyItem()
-                item['name'] = 'University of Sydney'
-                item['ch_name'] = '雪梨大學'
-                item['course_name'] = course['name']
-                item['course_url'] = course['url']
-                item['tuition_fee'] = tuition_fee
-                item['english_requirement'] = english_requirement
-                item['location'] = location
-                item['duration'] = duration
-                
-                yield item
-                
+                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-accordion__slide-content.m-accordion--ds__slide-content')))
             except TimeoutException:
                 print(f'注意!!!\n{course['name']}頁面加載超時: {course['url']}\n')
+                continue
+            
+            # 丟給scrapy解析
+            english_requirement = ''
+            admissions_page = scrapy.Selector(text=driver.page_source)
+            
+            english_requirements_list = admissions_page.css('.m-rich-content.m-rich-content--ds table tr')
+            for english_requirement_item in english_requirements_list:
+                title = english_requirement_item.css('td:nth-of-type(1) strong::text').get()
+                # 找IELTS的英文門檻
+                if title and 'IELTS' in title:
+                    english_requirement_raw = english_requirement_item.css('td:nth-child(2)::text').get()
+                    # 格式化文字
+                    english_requirement = self.extract_ielts_requirement_str(english_requirement_raw)
+                    break
+                    
+            # 輸出資訊
+            print(f'課程: {course['name']}')
+            print(f'課程url: {course['url']}')
+            print(f'學費: {tuition_fee}') 
+            print(f'英文門檻: {english_requirement}')
+            print(f'校區: {location}')
+            print(f'學制: {duration}')
+            print(f'\n')
+            
+            # 把資料存入 university Item
+            item = UniversityScrapyItem()
+            item['name'] = 'University of Sydney'
+            item['ch_name'] = '雪梨大學'
+            item['course_name'] = course['name']
+            item['course_url'] = course['url']
+            item['tuition_fee'] = tuition_fee
+            item['english_requirement'] = english_requirement
+            item['location'] = location
+            item['duration'] = duration
+            
+            yield item             
                       
     
     # 判斷href是否有改變
