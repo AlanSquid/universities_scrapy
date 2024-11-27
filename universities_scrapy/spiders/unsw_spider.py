@@ -43,13 +43,13 @@ class UnswSpiderSpider(scrapy.Spider):
                     driver.execute_script("arguments[0].click();", next_button)
                     wait.until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
                 else:
-                    print(f'共有 {len(self.full_link_list)} 筆資料')
+                    # print(f'共有 {len(self.full_link_list)} 筆資料')
                     for link in self.full_link_list:
                         yield SeleniumRequest(url=link, callback=self.page_parse, meta={'link': link})
                     break
                 
             except Exception as e:
-                print(f"發生錯誤: {str(e)}")
+                # print(f"發生錯誤: {str(e)}")
                 break
  
 
@@ -105,7 +105,7 @@ class UnswSpiderSpider(scrapy.Spider):
                 else:
                     english_requirement = f"IELTS {overall_score} (詳細要求: {subtest_requirements})"
         else:
-            print(f"{course_name}的英文格式不匹配，無法解析。{ielts_requirement}")
+            # print(f"{course_name}的英文格式不匹配，無法解析。{ielts_requirement}")
             english_requirement = None
         
         university = UniversityScrapyItem()
@@ -122,8 +122,10 @@ class UnswSpiderSpider(scrapy.Spider):
     
     def courses_url(self, courses):
         for course in courses:
-            course_url = course.find_element(By.CSS_SELECTOR, "h2.cmp-degree-search__results__list__card__content_header a").get_attribute("href")
-            self.full_link_list.append(course_url)
+            title = course.find_element(By.CSS_SELECTOR, "h2.cmp-degree-search__results__list__card__content_header a").text
+            if "Bachelor" in title: 
+                course_url = course.find_element(By.CSS_SELECTOR, "h2.cmp-degree-search__results__list__card__content_header a").get_attribute("href")
+                self.full_link_list.append(course_url)
 
     def closed(self, reason):
-        print('University of New South Wales 爬蟲完成!')
+        print(f'{self.name}爬蟲完畢\n新南威爾斯大學，共{len(self.full_link_list)}筆資料\n')

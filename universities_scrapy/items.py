@@ -6,7 +6,10 @@
 import scrapy
 
 def serialize_to_string(value):
-    return str(value)
+    if value is not None:
+        return str(value)
+    else:
+        return value
 
 def serialize_to_float(value):
     try:
