@@ -101,6 +101,8 @@ class EcuSpiderSpider(scrapy.Spider):
             # 列表轉字串
             location = ', '.join(location_list)    
             
+            duration = response.css('h3:contains("Duration") + p::text').re_first(r'(\d+\s+years?\s+full-?time)')
+
             # 把資料存入 university Item
             university = UniversityScrapyItem()
             university['name'] = 'Edith Cowan University'
@@ -109,6 +111,7 @@ class EcuSpiderSpider(scrapy.Spider):
             university['tuition_fee'] = tuition_fee
             university['location'] = location
             university['english_requirement'] = english_requirement
+            university['duration'] = duration
             university['course_url'] = response.url
 
             yield university
