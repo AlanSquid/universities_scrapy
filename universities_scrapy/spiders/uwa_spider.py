@@ -99,7 +99,7 @@ class UwaSpider(scrapy.Spider):
         university['name'] = 'University of Western Australia'
         university['ch_name'] = '西澳大學'
         university['course_name'] = response.meta.get('course_name')
-        university['tuition_fee'] = fee_2025
+        university['min_tuition_fee'] = fee_2025
         university['location'] =  response.meta.get('location')
         university['english_requirement'] = target_paragraph
         university['duration'] = duration

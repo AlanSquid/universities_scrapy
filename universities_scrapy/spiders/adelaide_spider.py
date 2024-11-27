@@ -44,7 +44,7 @@ class AdelaideSpider(scrapy.Spider):
             if "International student place" in text:
                 fee_match = re.search(r'\$([\d,]+)', text)
                 if fee_match:
-                    tuition_fee = int(fee_match.group(1).replace(',', ''))
+                    tuition_fee = fee_match.group(1).replace(',', '')
                 break
         
         # 取得英文門檻
@@ -62,7 +62,7 @@ class AdelaideSpider(scrapy.Spider):
         university['name'] = 'University of Adelaide'
         university['ch_name'] = '阿德雷得大學'
         university['course_name'] = course_name
-        university['tuition_fee'] = tuition_fee
+        university['min_tuition_fee'] = tuition_fee
         university['location'] =  locations
         university['english_requirement'] = english_requirement
         university['duration'] = duration

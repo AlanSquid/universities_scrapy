@@ -81,7 +81,7 @@ class SydneySpiderSpider(scrapy.Spider):
                 item['ch_name'] = '雪梨大學'
                 item['course_name'] = course['name']
                 item['course_url'] = course['url']
-                item['tuition_fee'] = course_detail['tuition_fee']
+                item['min_tuition_fee'] = course_detail['tuition_fee']
                 item['english_requirement'] = course_detail['english_requirement']
                 item['location'] = course_detail['location']
                 item['duration'] = course_detail['duration']
@@ -170,7 +170,7 @@ class SydneySpiderSpider(scrapy.Spider):
             item['ch_name'] = '雪梨大學'
             item['course_name'] = course['name']
             item['course_url'] = course['url']
-            item['tuition_fee'] = tuition_fee
+            item['min_tuition_fee'] = tuition_fee
             item['english_requirement'] = english_requirement
             item['location'] = location
             item['duration'] = duration

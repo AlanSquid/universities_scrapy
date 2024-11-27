@@ -155,7 +155,7 @@ class QutSpiderSpider(scrapy.Spider):
             university['name'] = "Queensland University of Technology"
             university['ch_name'] = "昆士蘭科技大學"
             university['course_name'] = course
-            university['tuition_fee'] = tuition_fee
+            university['min_tuition_fee'] = tuition_fee
             university['english_requirement'] = f'IELTS (Academic) {english_requirement}'
             university['location'] = location
             university['course_url'] = url

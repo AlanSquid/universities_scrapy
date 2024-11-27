@@ -108,7 +108,7 @@ class EcuSpiderSpider(scrapy.Spider):
             university['name'] = 'Edith Cowan University'
             university['ch_name'] = '伊迪斯科文大學'
             university['course_name'] = course_name
-            university['tuition_fee'] = tuition_fee
+            university['min_tuition_fee'] = tuition_fee
             university['location'] = location
             university['english_requirement'] = english_requirement
             university['duration'] = duration

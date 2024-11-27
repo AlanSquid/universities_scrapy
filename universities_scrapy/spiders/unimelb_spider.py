@@ -92,7 +92,8 @@ class UnimelbSpiderSpider(scrapy.Spider):
                     item['name'] = 'University of Melbourne'
                     item['ch_name'] = '墨爾本大學'
                     item['course_name'] = course_name
-                    item['tuition_fee'] = tuition_fee
+                    item['min_tuition_fee'] = tuition_fee[min]
+                    item['max_tuition_fee'] = tuition_fee[max]
                     item['english_requirement'] = english_requirement
                     item['duration'] = duration
                     item['course_url'] = course_url
@@ -115,11 +116,10 @@ class UnimelbSpiderSpider(scrapy.Spider):
 
         range_match = range_pattern.search(fee_string)
         if range_match:
-            return f"{range_match.group(1).replace(',', '')}-{range_match.group(2).replace(',', '')}"
-        
+            return {min:range_match.group(1).replace(',', ''),max:range_match.group(2).replace(',', '')}
         single_match = single_pattern.search(fee_string)
         if single_match:
-            return single_match.group(1).replace(',', '')
+            return {min:single_match.group(1).replace(',', ''),max:None}
 
         return '' 
     
