@@ -140,10 +140,9 @@ class SydneySpiderSpider(scrapy.Spider):
                 wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.m-accordion__slide-content.m-accordion--ds__slide-content')))
             except TimeoutException:
                 print(f'注意!!!\n{course['name']}頁面加載超時: {course['url']}\n')
-                continue
             
             # 丟給scrapy解析
-            english_requirement = ''
+            english_requirement = None
             admissions_page = scrapy.Selector(text=driver.page_source)
             
             english_requirements_list = admissions_page.css('.m-rich-content.m-rich-content--ds table tr')
