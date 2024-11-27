@@ -49,6 +49,7 @@ class AnuSpiderSpider(scrapy.Spider):
         tuition_fee_raw = response.css('#indicative-fees__international dl dd::text').get()
         tuition_fee = tuition_fee_raw.replace('$', '').replace(',', '').replace('.00', '').strip()
         
+        duration = response.css('li.degree-summary__requirements-length span.tooltip-area::text').get()
         
         # 把資料存入 university Item
         university = UniversityScrapyItem()
@@ -59,6 +60,7 @@ class AnuSpiderSpider(scrapy.Spider):
         university['tuition_fee'] = tuition_fee
         university['english_requirement'] = self.english_requirement
         university['english_requirement_url'] = self.english_requirement_url
+        university['duration'] = duration
         university['location'] = self.location
         
         yield university 

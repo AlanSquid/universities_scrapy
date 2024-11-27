@@ -67,7 +67,7 @@ class UnimelbSpiderSpider(scrapy.Spider):
                 
                 # 取得課程名稱
                 course_name = page.css("#page-header::text").get().strip()
-                
+
                 # 取得學費
                 tuition_fee = ''
                 info = page.css(".key-facts-section__main")
@@ -77,7 +77,10 @@ class UnimelbSpiderSpider(scrapy.Spider):
                     if 'Fees' in title:
                         tuition_fee_raw = item.css('.key-facts-section__main--value::text').get()
                         tuition_fee = self.extract_fee_range(tuition_fee_raw)
-                    
+                    if "Duration" in title:
+                        duration = item.css("div.key-facts-section__main--value::text").get()
+                        duration = ", ".join([d.strip() for d in duration.split("/")])
+
                     if 'English' in title:
                         english_requirement_raw = item.css('.key-facts-section__main--value::text').get().strip()
                         english_requirement = self.extract_ielts_requirement(english_requirement_raw)
@@ -91,6 +94,7 @@ class UnimelbSpiderSpider(scrapy.Spider):
                     item['course_name'] = course_name
                     item['tuition_fee'] = tuition_fee
                     item['english_requirement'] = english_requirement
+                    item['duration'] = duration
                     item['course_url'] = course_url
                     
                     yield item
