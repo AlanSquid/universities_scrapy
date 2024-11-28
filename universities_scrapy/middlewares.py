@@ -5,6 +5,7 @@
 
 from scrapy import signals
 import traceback
+import inspect
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
@@ -38,6 +39,14 @@ class UniversitiesScrapySpiderMiddleware:
             yield i
 
     def process_spider_exception(self, response, exception, spider):
+        # 取得錯誤的堆疊跟蹤
+        stack = traceback.extract_tb(exception.__traceback__)
+        if stack:
+            # 取得出錯的函數名稱
+            error_function = stack[-1].name
+        else:
+            error_function = "Unknown function"
+
         # 自定義錯誤格式
         spider_name = spider.name
         request_url = response.url
@@ -46,15 +55,15 @@ class UniversitiesScrapySpiderMiddleware:
 
         spider.logger.error(f"\n========================================================\n"
                             f"* 發生錯誤的 Spider: 「{spider_name}」\n"
-                            f"* while processing URL: {request_url}\n"
+                            f"* 正在進行的 URL: {request_url}\n"
+                            f"* 位於哪個 function: {error_function}\n"
                             f"========================================================\n"
                             )
         spider.logger.error(f"\n=============== Error Details ===============:\n"
                             f"{error_message}\n"
-                            # f"=============== Traceback ===============:\n"
-                            # f"{error_traceback}\n"
-                            # f"=============================================
-                            )
+                            f"=============== Traceback ===============:\n"
+                            f"{error_traceback}\n"
+                            f"=============================================")
 
         # 你可以選擇返回 None 或繼續處理其他結果
         return None
