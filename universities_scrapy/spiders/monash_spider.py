@@ -15,6 +15,7 @@ class MonashSpiderSpider(scrapy.Spider):
     ]
     scraper = cloudscraper.create_scraper() # 初始化一個可以發送 HTTP 請求的 Scraper 實例，並設置一些預設的request header（如 User-Agent），使得請求看起來像是來自真實用戶的瀏覽器
     all_course_url = []
+    non_international_num = 0
     start_time = time.time()
 
     def start_requests(self):
@@ -40,6 +41,7 @@ class MonashSpiderSpider(scrapy.Spider):
             paragraph = course_response.css('p::text').getall()  # 擷取所有的 <p> 標籤中的文字
             
             if any("Course offered to domestic students only" in p for p in paragraph) or 'Diploma' in course_name:
+                self.non_international_num += 1
                 continue
             else:
                 if course_url_international not in self.all_course_url:
@@ -48,21 +50,21 @@ class MonashSpiderSpider(scrapy.Spider):
             # 在course_response進一步找資料
             
             # 費用
-            try:
-                fee_url = course_url_international + "#application-fees"
-                fee_response = self.url_transfer_to_scrapy_response(fee_url)
-                fee_element = fee_response.css('h4:contains("International fee") + p + p strong::text').get()
+            # try:
+            fee_url = course_url_international + "#application-fees"
+            fee_response = self.url_transfer_to_scrapy_response(fee_url)
+            fee_element = fee_response.css('h4:contains("International fee") + p + p strong::text').get()
+            if fee_element:
+                tuition_fee = fee_element.replace("A$", "").replace(",", "").strip()
+            else:
+                fee_element = fee_response.css('h4:contains("International fee") + p + ul li strong::text').get()
                 if fee_element:
                     tuition_fee = fee_element.replace("A$", "").replace(",", "").strip()
                 else:
-                    fee_element = fee_response.css('h4:contains("International fee") + p + ul li strong::text').get()
-                    if fee_element:
-                        tuition_fee = fee_element.replace("A$", "").replace(",", "").strip()
-                    else:
-                        fee_element = fee_response.css('h4:contains("Full fee") + p + ul li strong::text').get()
-                        tuition_fee = fee_element.replace("A$", "").replace(",", "").strip()
-            except:
-                print(f"Fee information not found: {course_url_international}")
+                    fee_element = fee_response.css('h4:contains("Full fee") + p + ul li strong::text').get()
+                    tuition_fee = fee_element.replace("A$", "").replace(",", "").strip()
+            # except:
+            #     # print(f"Fee information not found: {course_url_international}")
             
             # 英文門檻
             eng_req_url = course_url_international + "#entry-requirements-2"
@@ -84,10 +86,10 @@ class MonashSpiderSpider(scrapy.Spider):
 
                     if match:
                         IELTS_score_result = f"{strong_text.strip()} {match.group(1)}"
-                    else:
-                        print("No match found.")
-                else:
-                    print(f"IELTS requirement not found: {course_url_international}")
+                #     else:
+                #         print("No match found.")
+                # else:
+                #     print(f"IELTS requirement not found: {course_url_international}")
             
             # 地點
             location_th = course_response.css('th').xpath(".//h5[text()='Location']")
@@ -195,7 +197,8 @@ class MonashSpiderSpider(scrapy.Spider):
         return scrapy_response
     
     def close(self):
-        print(len(self.all_course_url))
-        end_time = time.time()
-        elapsed_time = end_time - self.start_time
-        print(f'{elapsed_time:.2f}', '秒')
+        print(f'\n{self.name}爬蟲完畢！\n蒙納許大學，共{len(self.all_course_url) + self.non_international_num}筆資料')
+        print(f'其中有{self.non_international_num}個科系，不提供給國際生\n')
+        # end_time = time.time()
+        # elapsed_time = end_time - self.start_time
+        # print(f'{elapsed_time:.2f}', '秒')
