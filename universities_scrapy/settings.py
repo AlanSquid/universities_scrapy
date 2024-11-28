@@ -78,9 +78,9 @@ CURRENT_YEAR = 2024   # 調用方式 self.settings.get('CURRENT_YEAR')
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    "universities_scrapy.middlewares.UniversitiesScrapySpiderMiddleware": 543,
-#}
+SPIDER_MIDDLEWARES = {
+   "universities_scrapy.middlewares.UniversitiesScrapySpiderMiddleware": 543,
+}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
