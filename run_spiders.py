@@ -1,31 +1,24 @@
-import importlib  # 動態導入模組
-import pkgutil  # 對所有模組進行迭代
-import universities_scrapy.spiders  # 導入spiders模組
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
-import scrapy
+import os
+import subprocess
 
-# 把所有spirder拿出來
-def load_spiders(package):
-    spiders = []
-    package_path = package.__path__
-    for _, module_name, is_pkg in pkgutil.iter_modules(package_path):
-        if not is_pkg and module_name.endswith('_spider'):
-            module = importlib.import_module(f"{package.__name__}.{module_name}")
-            for attr in dir(module):
-                obj = getattr(module, attr)
-                if isinstance(obj, type) and issubclass(obj, scrapy.Spider) and obj.__module__ == module.__name__:
-                    spiders.append(obj)
-    return spiders
+# spiders目錄路徑
+spiders_dir = 'universities_scrapy/spiders'
+
+# 獲取所有_spider.py結尾的檔案
+spider_files = [f for f in os.listdir(spiders_dir) if f.endswith('_spider.py')]
+
+
+
+def run_spiders():
+    for spider_file in spider_files:
+        # 去除副檔名.py
+        spider_name = spider_file[:-3]
+        
+        # 執行scrapy crawl 命令
+        command = f'uv run scrapy crawl {spider_name}'
+        
+        print(f'Running spider: {spider_name}')
+        subprocess.run(command, shell=True, check=True)
 
 if __name__ == "__main__":
-    process = CrawlerProcess(get_project_settings())
-
-    # 把所有spirder拿出來
-    spiders = load_spiders(universities_scrapy.spiders)
-    
-    # 跌代spiders給CrawlerProcess執行
-    for spider in spiders:
-        process.crawl(spider)
-
-    process.start() 
+    run_spiders()
