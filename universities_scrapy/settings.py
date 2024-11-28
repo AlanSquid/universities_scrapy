@@ -34,7 +34,7 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
 ITEM_PIPELINES = {
-    'universities_scrapy.pipelines.UniversitiesScrapyPipeline': 300,
+    # 'universities_scrapy.pipelines.UniversitiesScrapyPipeline': 300,
     'universities_scrapy.pipelines.SaveToSharedFilePipeline': 300,
 
 }
