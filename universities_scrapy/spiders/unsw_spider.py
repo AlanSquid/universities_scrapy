@@ -29,11 +29,10 @@ class UnswSpiderSpider(scrapy.Spider):
         while True:
             try:
                 time.sleep(0.5)
-
-                courses = wait.until(
-                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".cmp-degree-search__results__list__card"))
-                )
-                self.courses_url(courses)
+                wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".cmp-degree-search__results__list__card")))
+                
+                course_page = scrapy.Selector(text=driver.page_source)
+                self.extract_courses_url(course_page)
 
                 # 檢查是否有下一頁
                 next_button = wait.until(
@@ -49,7 +48,7 @@ class UnswSpiderSpider(scrapy.Spider):
                     break
                 
             except Exception as e:
-                # print(f"發生錯誤: {str(e)}")
+                print(f"發生錯誤: {str(e)}")
                 break
  
 
@@ -120,11 +119,12 @@ class UnswSpiderSpider(scrapy.Spider):
         # university['english_requirement_url'] = 'https://www.unsw.edu.au/study/how-to-apply/english-language-requirements'
         yield university
     
-    def courses_url(self, courses):
-        for course in courses:
-            title = course.find_element(By.CSS_SELECTOR, "h2.cmp-degree-search__results__list__card__content_header a").text
+    def extract_courses_url(self, course_page):
+        cards = course_page.css('h2.cmp-degree-search__results__list__card__content_header a')
+        for card in cards:
+            title = card.css('::text').get()
             if "Bachelor" in title: 
-                course_url = course.find_element(By.CSS_SELECTOR, "h2.cmp-degree-search__results__list__card__content_header a").get_attribute("href")
+                course_url = card.css('::attr(href)').get()
                 self.full_link_list.append(course_url)
 
     def closed(self, reason):
