@@ -1,5 +1,6 @@
 import re
 import time
+import json
 import scrapy
 from scrapy_selenium import SeleniumRequest
 from universities_scrapy.items import UniversityScrapyItem
@@ -10,6 +11,7 @@ class QutSpiderSpider(scrapy.Spider):
     start_urls = ["https://www.qut.edu.au/study/international/"]
     seen_urls = set()
     start_time = time.time()
+    non_international_num = 0
 
     def start_requests(self):
         # 用 response.follow 發送起始請求
@@ -70,10 +72,12 @@ class QutSpiderSpider(scrapy.Spider):
                         
                     # 如果有連結，進行資料返回    
                     elif course_link:
+                        if "?international" not in str(course_link):
+                            course_link = response.urljoin(course_link) + "?international"
                         yield response.follow(
-                            url=response.urljoin(course_link) + "?international",
+                            url=course_link,
                             callback=self.parse_course_page,
-                            meta={'course': course_name, 'url': response.urljoin(course_link) + "?international"},
+                            meta={'course': course_name, 'url': course_link},
                         )
     # 專門處理creative art小類別的url的function
     def parse_creative_art_course(self, response):
@@ -83,15 +87,12 @@ class QutSpiderSpider(scrapy.Spider):
             if 'Bachelor' in art_course_names[i]:
                 art_course_name = art_course_names[i].strip()
                 art_course_link = art_course_links[i].strip()
-                if art_course_link in self.seen_urls:
-                    continue
-                
-                # 如果是新的 URL，就加入集合並進行 yield
-                self.seen_urls.add(art_course_link)
+                if "?international" not in str(art_course_link):
+                    art_course_link = response.urljoin(art_course_link) + "?international"
                 yield response.follow(
-                    url=response.urljoin(art_course_link),
+                    url=art_course_link,
                     callback=self.parse_course_page,
-                    meta={'course': art_course_name, 'url': response.urljoin(art_course_link) + "?international"},
+                    meta={'course': art_course_name, 'url': art_course_link},
                 )
     # 除了creative art小類別，蒐集其他網頁的課程url
     def parse_course_link(self, response):
@@ -102,21 +103,16 @@ class QutSpiderSpider(scrapy.Spider):
                 course_name = course.css('::text').get().strip()
                 course_link = course.attrib.get('href')
                 if course_name and course_link and 'Bachelor' in course_name:
-                    # 如果 URL 已經被處理過，則跳過這個項目
-                    if course_link in self.seen_urls:
-                        continue
-                    
-                    # 如果是新的 URL，就加入集合並進行 yield
-                    self.seen_urls.add(course_link)
+                    if "?international" not in str(course_link):
+                        course_link = response.urljoin(course_link) + "?international"
                     yield response.follow(
-                        url=response.urljoin(course_link) + "?international",
+                        url=course_link,
                         callback=self.parse_course_page,
-                        meta={'course': course_name, 'url': response.urljoin(course_link) + "?international"},
+                        meta={'course': course_name, 'url': course_link},
                     )
                     
     # 在課程網頁中抓取資料
     def parse_course_page(self, response):
-
         meta_data = response.meta 
         course = meta_data['course']
         url = meta_data['url']
@@ -141,7 +137,6 @@ class QutSpiderSpider(scrapy.Spider):
         durations = response.css('li[data-course-map-key="quickBoxDurationINTFt"]::text').getall()
         duration = ', '.join([d.strip() for d in durations])
         
-        
         # 英文門檻
         english_requirement = ''
         english_requirements = response.css('table#int-elt-table td#elt-overall::text').getall()
@@ -151,6 +146,7 @@ class QutSpiderSpider(scrapy.Spider):
                 break
         
         if tuition_fee and location and english_requirement:
+            self.seen_urls.add(response.url)
             university = UniversityScrapyItem()
             university['name'] = "Queensland University of Technology"
             university['ch_name'] = "昆士蘭科技大學"
@@ -161,9 +157,22 @@ class QutSpiderSpider(scrapy.Spider):
             university['course_url'] = url
             university['duration'] = duration
             yield university
+        else:
+            audience_element = response.xpath('//span[@data-course-audience="DOM" and text()="This course is only available for Australian and New Zealand students."]')
+            if audience_element:
+                self.non_international_num += 1
+                # print(f'不收國際生: {response.url}')
+            # 專門處理類似creative art小類別的網頁
+            else:
+                url = str(response.url).replace("?international", "")
+                yield response.follow(
+                    url=url,
+                    callback=self.parse_creative_art_course,
+                )
 
     def close(self):
-        print(len(self.seen_urls))
-        end_time = time.time()
-        elapsed_time = end_time - self.start_time
-        print(f'{elapsed_time:.2f}', '秒')
+        print(f'\n{self.name}爬蟲完畢！\n昆士蘭科技大學，共{len(self.seen_urls) + self.non_international_num}筆資料')
+        print(f'有{self.non_international_num}個科系，不提供給國際生\n')
+        # end_time = time.time()
+        # elapsed_time = end_time - self.start_time
+        # print(f'{elapsed_time:.2f}', '秒')

@@ -110,7 +110,7 @@ class UqSpiderSpider(scrapy.Spider):
         yield university
         
     def close(self):
-        print(len(self.all_course_url))
-        end_time = time.time()
-        elapsed_time = end_time - self.start_time
-        print(f'{elapsed_time:.2f}', '秒')
+        print(f'\n{self.name}爬蟲完畢！\n昆士蘭大學，共{len(self.all_course_url)}筆資料\n')
+        # end_time = time.time()
+        # elapsed_time = end_time - self.start_time
+        # print(f'{elapsed_time:.2f}', '秒')
