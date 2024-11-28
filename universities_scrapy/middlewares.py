@@ -4,6 +4,7 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+import traceback
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
@@ -37,11 +38,26 @@ class UniversitiesScrapySpiderMiddleware:
             yield i
 
     def process_spider_exception(self, response, exception, spider):
-        # Called when a spider or process_spider_input() method
-        # (from other spider middleware) raises an exception.
+        # 自定義錯誤格式
+        spider_name = spider.name
+        request_url = response.url
+        error_message = exception
+        error_traceback = traceback.format_exc()
 
-        # Should return either None or an iterable of Request or item objects.
-        pass
+        spider.logger.error(f"\n========================================================\n"
+                            f"* 發生錯誤的 Spider: 「{spider_name}」\n"
+                            f"* while processing URL: {request_url}\n"
+                            f"========================================================\n"
+                            )
+        spider.logger.error(f"\n=============== Error Details ===============:\n"
+                            f"{error_message}\n"
+                            # f"=============== Traceback ===============:\n"
+                            # f"{error_traceback}\n"
+                            # f"=============================================
+                            )
+
+        # 你可以選擇返回 None 或繼續處理其他結果
+        return None
 
     def process_start_requests(self, start_requests, spider):
         # Called with the start requests of the spider, and works
