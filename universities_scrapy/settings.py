@@ -51,6 +51,15 @@ DOWNLOADER_MIDDLEWARES = {
     'scrapy_selenium.SeleniumMiddleware': 800,
 }
 
+# Playwright 配置
+DOWNLOAD_HANDLERS = {
+    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+}
+
+TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+
+
 CURRENT_YEAR = 2024   # 調用方式 self.settings.get('CURRENT_YEAR')
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
