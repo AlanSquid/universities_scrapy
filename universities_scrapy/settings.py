@@ -59,6 +59,7 @@ DOWNLOAD_HANDLERS = {
 
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 
+PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 60 * 1000
 
 CURRENT_YEAR = 2024   # 調用方式 self.settings.get('CURRENT_YEAR')
 
