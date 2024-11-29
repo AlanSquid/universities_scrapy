@@ -99,5 +99,3 @@ class UtsSpider(scrapy.Spider):
     
     def closed(self, reason):    
         print(f'{self.name}爬蟲完成!\n雪梨科技大學, 共有 {len(self.all_course_url)} 筆資料\n')
-
-        print('uts_spider 爬蟲完成!')
