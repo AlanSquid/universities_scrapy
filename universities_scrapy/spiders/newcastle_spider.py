@@ -10,9 +10,6 @@ class NewcastleSpiderSpider(scrapy.Spider):
     start_urls = ["https://www.newcastle.edu.au/degrees#filter=level_undergraduate,intake_international"]
     courses = []
     except_count = 0
-    custom_settings = {
-        'CONCURRENT_REQUESTS': 10,
-    }
     
     def start_requests(self):
         for url in self.start_urls:
@@ -62,6 +59,7 @@ class NewcastleSpiderSpider(scrapy.Spider):
         # 抓取學費
         tuition_fee_raw = course_page.css('.bf.degree-international-fee::text').get()
         if tuition_fee_raw is None:
+            print(f'{course_name}\n{response.url}\n此課程目前不開放申請\n')
             self.except_count += 1
             return
         tuition_fee = tuition_fee_raw.replace('AUD', '').replace(',', '').strip() if tuition_fee_raw else None
@@ -132,7 +130,7 @@ class NewcastleSpiderSpider(scrapy.Spider):
     
     def closed(self, reason):
         print(f'{self.name}爬蟲完成!')
-        print(f'紐卡索大學，共有 {len(self.courses) - self.except_count} 筆資料')
+        print(f'紐卡索大學，共有 {len(self.courses) - self.except_count} 筆資料(已扣除不開放申請)')
         print(f'有 {self.except_count} 筆目前不開放申請\n')
         
 
