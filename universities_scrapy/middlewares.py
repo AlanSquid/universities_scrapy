@@ -6,6 +6,7 @@
 from scrapy import signals
 import traceback
 import inspect
+from collections.abc import AsyncIterable
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
@@ -30,12 +31,24 @@ class UniversitiesScrapySpiderMiddleware:
         # Should return None or raise an exception.
         return None
 
+    # 修改後可以根據result的類型來判斷是同步還是異步的處理
     def process_spider_output(self, response, result, spider):
-        # Called with the results returned from the Spider, after
-        # it has processed the response.
+        if isinstance(result, AsyncIterable):
+            return self.process_spider_output_async(response, result, spider)
+        else:
+            return self.process_spider_output_sync(response, result, spider)
+            
+    def process_spider_output_sync(self, response, result, spider):
+        for i in result:
+            yield i
+
+            
+    async def process_spider_output_async(self, response, result, spider):
+    # Called with the results returned from the Spider, after
+    # it has processed the response.
 
         # Must return an iterable of Request, or item objects.
-        for i in result:
+        async for i in result:
             yield i
 
     def process_spider_exception(self, response, exception, spider):
