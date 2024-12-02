@@ -57,8 +57,6 @@ DOWNLOAD_HANDLERS = {
     "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
 }
 
-TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
-
 PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 120 * 1000
 
 # 默認的500, 502, 503, 504以外，追加522, 524, 408, 429:
