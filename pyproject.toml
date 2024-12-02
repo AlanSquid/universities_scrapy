@@ -10,6 +10,7 @@ dependencies = [
     "scrapy>=2.11.2",
     "selenium==4.9",
     "cloudscraper>=1.2.71",
+    "scrapy-playwright>=0.0.42",
 ]
 
 [dependency-groups]
