@@ -11,13 +11,14 @@ from selenium.common.exceptions import TimeoutException
 class CurtinSpider(scrapy.Spider):
     name = "curtin_spider"
     allowed_domains = ["www.curtin.edu.au"]
-    start_urls = ["https://www.curtin.edu.au/study/search/?search_text&study_level=undergraduate&category=degree"]
+    # 只有degree
+    # start_urls = ["https://www.curtin.edu.au/study/search/?search_text=&study_level=undergraduate&category=degree"]
+    # degree,double degree,honors degree
+    start_urls = ["https://www.curtin.edu.au/study/search/?search_text=&study_level=undergraduate&category=degree,double_degree,honors_degree"]
     full_link_list=[]
 
     def parse(self, response):
         cards = response.css("div.search-card")
-        # with open('output.html', 'w', encoding='utf-8') as f:
-        #     f.write(driver.page_source)
         for card in cards: 
             full_link = card.css("a::attr(href)").get()
             self.full_link_list.append(full_link)
@@ -35,7 +36,6 @@ class CurtinSpider(scrapy.Spider):
             driver = response.meta['driver']
             link = response.meta['link'] 
             wait = WebDriverWait(driver, 10)
-            # print(f"Processing course details for: {link}")
             try:
                 driver.get(link)  # 進入課程的詳細頁面
                 wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "h1.offering-overview__hero__title")))
@@ -52,37 +52,45 @@ class CurtinSpider(scrapy.Spider):
                 # print("Element not found for this card.")
                 return  # 結束當前方法，跳過當前卡片
     
-            # with open('output.html', 'w', encoding='utf-8') as f:
-            #     f.write(driver.page_source)
-            
             # 取得課程標題
             page = scrapy.Selector(text=driver.page_source)
             course_name = page.css('h1.offering-overview__hero__title::text').get().strip() 
 
             # 取得校區
             location_dt_elements = page.css("dt")
-            for dt in location_dt_elements:
-                if "Location" in dt.css("::text").get():  # 找到 <dt> 包含 "Location"
-                    location_dd = dt.xpath("following-sibling::dd").get()  # 取得下一个 <dd>                    
-                    
-                    # 直接提取所有 <span> 的文本内容
-                    spans = scrapy.Selector(text=location_dd).css("span::text").getall()
-                    location_format = ', '.join(span.strip() for span in spans if span.strip())  
-                    location_format = location_format.replace(',,', ',').strip(', ')
-                    if location_format.endswith(','):
-                        location_format = location_format[:-1].strip() 
-                    break
+            if location_dt_elements:
+                for dt in location_dt_elements:
+                    if "Location" in dt.css("::text").get():  # 找到 <dt> 包含 "Location"
+                        location_dd = dt.xpath("following-sibling::dd").get()  # 取得下一个 <dd>                    
+                        
+                        # 直接提取所有 <span> 的文本内容
+                        spans = scrapy.Selector(text=location_dd).css("span::text").getall()
+                        location_format = ', '.join(span.strip() for span in spans if span.strip())  
+                        location_format = location_format.replace(',,', ',').strip(', ')
+                        if location_format.endswith(','):
+                            location_format = location_format[:-1].strip() 
+                        break
+            else:
+                location_format = None
+
             # 取得duration
-            duration = response.css("dd.details-duration::text").get().strip()
-            
+            duration_selector = response.css("dd.details-duration::text").get()
+            if duration_selector:
+                duration = duration_selector.strip()
+            else:
+                duration = None
+
             # 取得英文門檻
-            english_requirement_format = ""
+            english_requirement_format = None
             english_rows = page.css("div.english-table_row")
-            for row in english_rows:
-                cols = row.css("p")
-                if "Overall band score" in cols[0].css("::text").get():
-                    english_requirement_format = f"IELTS {cols[1].css('::text').get().strip()}"
-                    break
+            if english_rows:  
+                for row in english_rows:
+                    cols = row.css("p")
+                    if cols and "Overall band score" in cols[0].css("::text").get():
+                        english_requirement_format = f"IELTS {cols[1].css('::text').get().strip()}"
+                        break
+            else:
+                english_requirement_format = None
 
             # 取得費用
             tuition_fee_format = None
