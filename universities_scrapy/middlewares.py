@@ -74,9 +74,10 @@ class UniversitiesScrapySpiderMiddleware:
                             )
         spider.logger.error(f"\n=============== Error Details ===============:\n"
                             f"{error_message}\n"
-                            f"=============== Traceback ===============:\n"
-                            f"{error_traceback}\n"
-                            f"=============================================")
+                            # f"=============== Traceback ===============:\n"
+                            # f"{error_traceback}\n"
+                            # f"============================================="
+                            )
 
         # 你可以選擇返回 None 或繼續處理其他結果
         return None
