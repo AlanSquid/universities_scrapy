@@ -18,22 +18,18 @@ class RmitSpiderSpider(scrapy.Spider):
     retry_quota = 100
     start_time = time.time()
     
-    # custom_settings = {
-    #     'FEEDS': {
-    #         'rmit_data.json': {
-    #             'format': 'json',
-    #             'encoding': 'utf-8',
-    #         },
-    #         'rmit_data.csv': {
-    #             'format': 'csv',
-    #             'encoding': 'utf-8-sig',
-    #         }
-    #     },
-    #     'FEED_EXPORT_FIELDS': [
-    #         'name', 'ch_name', 'course_name', 'min_tuition_fee',
-    #         'english_requirement', 'location', 'course_url', 'duration'
-    #     ],
-    # }
+    custom_settings = {
+        'FEEDS': {
+            'rmit_data.csv': {
+                'format': 'csv',
+                'encoding': 'utf-8-sig',
+            }
+        },
+        'FEED_EXPORT_FIELDS': [
+            'name', 'ch_name', 'course_name', 'min_tuition_fee',
+            'english_requirement', 'location', 'course_url', 'duration'
+        ],
+    }
     
     def start_requests(self):
         url = self.start_urls[0]
@@ -91,7 +87,12 @@ class RmitSpiderSpider(scrapy.Spider):
         selector = Selector(text=page_source)
                 
         # 費用
-        fee = selector.css('span.cbResultSetData.cbResultSetNestedAlign::text').get().strip()
+        fee_span = selector.css('span.cbResultSetData.cbResultSetNestedAlign::text').getall()
+        for span in fee_span:
+            if "AU$" in span:
+                fee = span.strip()
+                break
+            
         pattern = r"\D*(\d+[\d,]*)"  # \D* 匹配非數字字符，\d+ 匹配數字
         match = re.search(pattern, fee)
         if match:
