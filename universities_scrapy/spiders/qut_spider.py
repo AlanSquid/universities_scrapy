@@ -171,8 +171,8 @@ class QutSpiderSpider(scrapy.Spider):
                 )
 
     def close(self):
-        print(f'\n{self.name}爬蟲完畢！\n昆士蘭科技大學，共{len(self.seen_urls) + self.non_international_num}筆資料')
-        print(f'有{self.non_international_num}個科系，不提供給國際生\n')
+        print(f'\n{self.name}爬蟲完畢！\n昆士蘭科技大學，共{len(self.seen_urls)}個課程開放給國際生')
+        print(f'其中有{self.non_international_num}個科系，不開放給國際生\n')
         # end_time = time.time()
         # elapsed_time = end_time - self.start_time
         # print(f'{elapsed_time:.2f}', '秒')
