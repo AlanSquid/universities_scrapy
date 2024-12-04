@@ -15,21 +15,21 @@ class RmitSpiderSpider(scrapy.Spider):
     start_urls = ["https://www.rmit.edu.au/study-with-us/international-students/programs-for-international-students/courses-for-international-students-by-study-area?activeTab=All"]
     all_course_url = []
     all_course_name = []
-    retry_quota = 100
     start_time = time.time()
+    retry_quota = 40
     
-    custom_settings = {
-        'FEEDS': {
-            'rmit_data.csv': {
-                'format': 'csv',
-                'encoding': 'utf-8-sig',
-            }
-        },
-        'FEED_EXPORT_FIELDS': [
-            'name', 'ch_name', 'course_name', 'min_tuition_fee',
-            'english_requirement', 'location', 'course_url', 'duration'
-        ],
-    }
+    # custom_settings = {
+    #     'FEEDS': {
+    #         'universities_output/rmit_data.csv': {
+    #             'format': 'csv',
+    #             'encoding': 'utf-8-sig',
+    #         }
+    #     },
+    #     'FEED_EXPORT_FIELDS': [
+    #         'name', 'ch_name', 'course_name', 'min_tuition_fee',
+    #         'english_requirement', 'location', 'course_url', 'duration'
+    #     ],
+    # }
     
     def start_requests(self):
         url = self.start_urls[0]
@@ -75,70 +75,95 @@ class RmitSpiderSpider(scrapy.Spider):
                 
     def parse_course(self, response):
         driver = response.meta["driver"]
-        course_name = response.meta['course_name']
-        is_major = response.meta['is_major']
-        major = response.meta['major']
-        url = response.url
+        driver.get(response.url)
         
-        wait = WebDriverWait(driver, 30)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "span.cbResultSetData.cbResultSetNestedAlign")))
-        
-        page_source = driver.page_source
-        selector = Selector(text=page_source)
-                
-        # 費用
-        fee_span = selector.css('span.cbResultSetData.cbResultSetNestedAlign::text').getall()
-        for span in fee_span:
-            if "AU$" in span:
-                fee = span.strip()
-                break
-            
-        pattern = r"\D*(\d+[\d,]*)"  # \D* 匹配非數字字符，\d+ 匹配數字
-        match = re.search(pattern, fee)
-        if match:
-            tuition_fee = match.group(1).replace(",", "")
-        
-        # 英文門檻
-        eng_req_li = selector.css('div.cmp-text li::text').getall()
-        for li_text in eng_req_li:
-            if 'IELTS' in li_text:
-                pattern = r"IELTS\s*\((.*?)\)\s*[:：]\s*.*?(\d+(\.\d+)?)"
-                match = re.search(pattern, li_text)
-                if match:
-                    english_requirement = match.group(2)  # 提取數字部分
-                
-        # 校區
-        locations = selector.xpath('//dt[text()=" Location:"]/following-sibling::dd[@class="desc qf-int-location"]/text()').getall()
-        locations = [all_location.strip() for all_location in locations]
-        location = ', '.join(locations)
-        
-        # 學制(期間)
-        durations = selector.xpath('//dt[text()=" Duration:"]/following-sibling::dd[@class="desc qf-int-duration"]/text()').getall()
-        durations = [all_duration.strip() for all_duration in durations]
-        duration = ', '.join(durations)
-        
-        if is_major:
-            url = f"{response.url}/{major}"
-        else:
+        try:
+            course_name = response.meta['course_name']
+            is_major = response.meta['is_major']
+            major = response.meta['major']
             url = response.url
-        
-        if url not in self.all_course_url and course_name not in self.all_course_name:
-            self.all_course_url.append(url)
-            self.all_course_name.append(course_name)
-        else:
-            return
-        
-        university = UniversityScrapyItem()
-        university['name'] = "Royal Melbourne Institute of Technology"
-        university['ch_name'] = "墨爾本皇家理工大學"
-        university['course_name'] = course_name
-        university['min_tuition_fee'] = tuition_fee
-        university['english_requirement'] = f'IELTS (Academic) {english_requirement}'
-        university['location'] = location
-        university['course_url'] = url
-        university['duration'] = duration
-        yield university
             
+            wait = WebDriverWait(driver, 60)
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "span.cbResultSetData.cbResultSetNestedAlign")))
+            
+            page_source = driver.page_source
+            selector = Selector(text=page_source)
+                    
+            # 費用
+            fee_span = selector.css('span.cbResultSetData.cbResultSetNestedAlign::text').getall()
+            for span in fee_span:
+                if "AU$" in span:
+                    fee = span.strip()
+                    # 使用正則表達式匹配 "AU$" 後的數字
+                    pattern = r"AU\$\s*(\d[\d,]*)"  # 匹配 AU$ 後的數字，允許逗號
+                    match = re.search(pattern, fee)
+                    if match:
+                        tuition_fee = match.group(1).replace(",", "")  # 去掉逗號
+                    break
+            
+            # 英文門檻
+            eng_req_li = selector.css('div.cmp-text li::text').getall()
+            for li_text in eng_req_li:
+                if 'IELTS' in li_text:
+                    pattern = r"IELTS\s*\((.*?)\)\s*[:：]\s*.*?(\d+(\.\d+)?)"
+                    match = re.search(pattern, li_text)
+                    if match:
+                        english_requirement = match.group(2)  # 提取數字部分
+                    
+            # 校區
+            locations = selector.xpath('//dt[text()=" Location:"]/following-sibling::dd[@class="desc qf-int-location"]/text()').getall()
+            locations = [all_location.strip() for all_location in locations]
+            location = ', '.join(locations)
+            
+            # 學制(期間)
+            durations = selector.xpath('//dt[text()=" Duration:"]/following-sibling::dd[@class="desc qf-int-duration"]/text()').getall()
+            durations = [all_duration.strip() for all_duration in durations]
+            duration = ', '.join(durations)
+            
+            # 將有分major的課程
+            if is_major:
+                url = f"{response.url}/{major}"
+            else:
+                url = response.url
+            
+            if url not in self.all_course_url:
+                if course_name not in self.all_course_name:
+                    self.all_course_url.append(url)
+                    self.all_course_name.append(course_name)
+            else:
+                return
+            
+            university = UniversityScrapyItem()
+            university['name'] = "Royal Melbourne Institute of Technology"
+            university['ch_name'] = "墨爾本皇家理工大學"
+            university['course_name'] = course_name
+            university['min_tuition_fee'] = tuition_fee
+            university['english_requirement'] = f'IELTS (Academic) {english_requirement}'
+            university['location'] = location
+            university['course_url'] = url
+            university['duration'] = duration
+            yield university
+        
+        except Exception as e:
+            # logging.exception(f"錯誤發生在 URL: {response.url}")
+            # print(f"錯誤訊息: {str(e)}")
+            if self.retry_quota == 0:
+                print(f'失敗的網址: {url}')
+                return
+            print(f'剩餘可重試次數: {self.retry_quota}')
+            self.retry_quota -= 1
+            time.sleep(1)
+            yield SeleniumRequest(
+                url=response.url,
+                dont_filter=True,
+                meta=dict(
+                    course_name=course_name,
+                    is_major=is_major,
+                    major=major,
+                ), 
+                callback=self.parse_course, 
+            )
+        
     def close(self):
         print(f"墨爾本皇家理工大學({self.name})總共{len(self.all_course_url)}個科系")
         # end_time = time.time()

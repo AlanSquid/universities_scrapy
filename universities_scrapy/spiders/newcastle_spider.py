@@ -59,7 +59,7 @@ class NewcastleSpiderSpider(scrapy.Spider):
         # 抓取學費
         tuition_fee_raw = course_page.css('.bf.degree-international-fee::text').get()
         if tuition_fee_raw is None:
-            print(f'{course_name}\n{response.url}\n此課程目前不開放申請\n')
+            # print(f'{course_name}\n{response.url}\n此課程目前不開放申請\n')
             self.except_count += 1
             return
         tuition_fee = tuition_fee_raw.replace('AUD', '').replace(',', '').strip() if tuition_fee_raw else None
