@@ -39,10 +39,17 @@ class SaveToSharedFilePipeline:
         for field_name in adapter.keys():
             value = adapter.get(field_name)
 
-            if field_name in {'min_tuition_fee', 'max_tuition_fee'}:  # 學費轉 float
+            if field_name in {'min_fee', 'max_fee', 'eng_req', 'duration'}:  # 轉 float
                 try:
                     adapter[field_name] = (
                         round(float(value), 2) if value is not None else value
+                    )
+                except ValueError:
+                    adapter[field_name] = None
+            elif field_name in {'university_id', 'degree_level_id', 'currency_id', 'course_category_id'}:  # 轉 int
+                try:
+                    adapter[field_name] = (
+                        int(value) if value is not None else value
                     )
                 except ValueError:
                     adapter[field_name] = None
