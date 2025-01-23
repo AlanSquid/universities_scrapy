@@ -5,7 +5,10 @@ import re
 class UwaSpider(scrapy.Spider):
     name = "uwa_spider"
     allowed_domains = ["www.uwa.edu.au", "www.search.uwa.edu.au"]
-    start_urls = ["https://www.search.uwa.edu.au/s/search.html?collection=uwa~sp-search&f.Level+of+study%7CcourseStudyLevel=undergraduate&f.International%7Cinternational=Available+to+International+Students&f.Tabs%7Ccourses=Courses&num_ranks=100&sort="]
+    # start_urls = ["https://www.search.uwa.edu.au/s/search.html?collection=uwa~sp-search&f.Level+of+study%7CcourseStudyLevel=undergraduate&f.International%7Cinternational=Available+to+International+Students&f.Tabs%7Ccourses=Courses&num_ranks=100&sort="]
+    # start_urls = ["https://www.search.uwa.edu.au/s/search.html?f.Tabs%7Ccourses=Courses&num_ranks=100&f.Level+of+study%7CcourseStudyLevel=undergraduate&f.Level+of+study%7CcourseStudyLevel=postgraduate&f.International%7Cinternational=Available+to+International+Students&collection=uwa%7Esp-search&sort="]
+    start_urls = ["https://www.search.uwa.edu.au/s/search.html?f.Tabs%7Ccourses=Courses&query=&f.International%7Cinternational=Available+to+International+Students&collection=uwa%7Esp-search"]
+
     full_data=[]
     
     def parse(self, response):
@@ -13,11 +16,22 @@ class UwaSpider(scrapy.Spider):
         for card in cards: 
             url = card.css("a::attr(data-live-url)").get()
             course_name = card.css("h3.listing-item__title::text").get().strip()
-            location = card.css("dt:contains('Location:') + dd::text").get()
+           
+            # 跳過雙學位, Honours, Online, Graduate Certificate, Diploma
+            skip_keywords = ["Doctor of", "Honours", "Online", "Graduate Certificate", "Diploma"]
+            keywords = ["Bachelor of", "Master of", "Doctor of"]
+            if not course_name or any(keyword in course_name for keyword in skip_keywords) or sum(course_name.count(keyword) for keyword in keywords) >= 2:
+                # print('跳過:',course_name)
+                continue
+
+            # 刪除 master of 和 bachelor of
+            name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
+         
+            campus = card.css("dt:contains('Location:') + dd::text").get()
             self.full_data.append({
                 'url':url,
-                'course_name':course_name,
-                'location':location
+                'course_name':name,
+                'campus':campus
             })
 
         # 檢查下一頁
@@ -27,7 +41,63 @@ class UwaSpider(scrapy.Spider):
         else:
             # print(f'共有 {len(self.full_data)} 筆資料')
             for data in self.full_data:
-                yield response.follow(data['url'], self.page_parse, meta={'location': data['location'],'course_name':data['course_name']})
+                yield response.follow(data['url'], self.page_parse, meta={'campus': data['campus'],'course_name':data['course_name']})
+
+    def normalize_duration(self, duration):
+        # 如果字串為空或無效，返回 None
+        if not duration:
+            return None
+
+        # 處理 "Three years" -> "3 years"
+        duration = re.sub(r'\b(One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten)\b', 
+                        lambda x: str({'One': 1, 'Two': 2, 'Three': 3, 'Four': 4, 'Five': 5, 
+                                        'Six': 6, 'Seven': 7, 'Eight': 8, 'Nine': 9, 'Ten': 10}[x.group(0)]), 
+                        duration, flags=re.IGNORECASE)
+
+        # 處理區間，例如 "4-8 months" -> "0.33 years"（取最小值）
+        duration = re.sub(r'(\d+)\s*[-to]\s*(\d+)\s*months?', 
+                        lambda m: str(min(int(m.group(1)), int(m.group(2))) / 12) + " years", 
+                        duration)
+
+        # 處理單個月份 "months" -> "years" 轉換
+        duration = re.sub(r'(\d+)\s*months?', 
+                        lambda m: str(int(m.group(1)) / 12) + " years", 
+                        duration)
+
+        # 處理區間，例如 "1.5-2 years" -> "1.5 years"（取較小的數字）
+        duration = re.sub(r'(\d+(\.\d+)?)\s*[-to]\s*(\d+(\.\d+)?)\s*years?', 
+                        lambda m: str(min(float(m.group(1)), float(m.group(3)))), duration)
+
+        # 去除 [Hons]、(BSc) 或其他不需要的部分
+        duration = re.sub(r'\[.*?\]|\(.*?\)', '', duration)
+
+        # 去除 "full-time" 和 "part-time" 並根據情況處理
+        duration = re.sub(r'\b(part-time|full-time)\b', '', duration)
+
+        # 處理 "semester" 轉換為 0.5 年
+        duration = re.sub(r'\bsemester\b', '0.5 years', duration)
+
+        # 清除其他可能的標點符號和多餘空白
+        duration = re.sub(r'[^\d.]+', ' ', duration).strip()
+
+        # 如果處理後只剩下數字，則進行提取
+        durations = re.findall(r'(\d+\.?\d*)', duration)
+
+        # 如果沒有找到年份，返回 None
+        if not durations:
+            return None
+
+        # 將所有的年數轉換為浮動數字（浮點數）
+        durations = [float(d) for d in durations]
+
+        # 選擇最小的年份（你可以根據需求選擇最小值或其他邏輯）
+        min_duration = min(durations)
+
+        # 轉換為整數（如果沒有小數部分）或保留小數（如果有小數部分）
+        if min_duration.is_integer():
+            return int(min_duration)  # 沒有小數部分，返回整數
+        else:
+            return round(min_duration, 2)  # 有小數部分，保留兩位小數
     
     
     def page_parse(self, response):
@@ -36,6 +106,12 @@ class UwaSpider(scrapy.Spider):
 
         # 取得學費
         international_fees = response.css('div.segment-info[data-segment-filter="international"]')
+        degree_level = response.css('div.course-header-module-titles h2::text').get()
+        if "Undergraduate" in degree_level :
+            degree_level_id=1
+        elif "Postgraduate" in degree_level:
+            degree_level_id=2
+
         # 檢查是否有 "2025" 的學費資訊
         fee_2025 = international_fees.xpath(
             './/div[contains(@class, "card-details-label") and contains(text(), "2025")]/following-sibling::div[contains(@class, "card-details-value")]/text()'
@@ -79,30 +155,36 @@ class UwaSpider(scrapy.Spider):
                 target_paragraph = (f"IELTS {total_score} (閱讀和寫作單項不低於 {reading_writing_score}，"
                                 f"聽力和口語不低於 {listening_speaking_score})")
             else:
+                total_score = None
                 target_paragraph = None
         else:
+            total_score = None
             target_paragraph = None
-
         # 取得duration
         course_details = response.css('div#course-details')
-        duration_info = course_details.css('div.course-detail.card').xpath(
-            './/h3[contains(text(), "Quick details")]/following-sibling::div[@class="card-container"]'
-            '//div[@class="card-details-label" and text()="Full time/part time duration"]/following-sibling::div//ul/li/text()'
-        ).getall()
-        if not duration_info:
-            duration = None  
-        else:
-            duration = "; ".join([d.replace('\n', '').strip() for d in duration_info])
-     
+        duration_int = course_details.xpath(
+            # './/div[contains(@class, "card-details-dynamic")]//div[@class="card-details-label" and text()="Full time/part time duration"]/following-sibling::div[@class="card-details-value"]//li/text()'
+            # './/div[contains(@class, "card-details-dynamic")]//div[@class="card-details-label" and re:match(., "full time/part time duration", "i")]/following-sibling::div[@class="card-details-value"]//li/text()'
+            './/div[contains(@class, "card-details-dynamic")]//div[re:match(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "full time/part time duration", "i")]/following-sibling::div[@class="card-details-value"]//li/text()'
+        ).get()
+
+        if duration_int:
+            duration_int = duration_int.replace('\n', ' ').strip()
+        
+        duration = self.normalize_duration(duration_int)
+       
         # 把資料存入 university Item
         university = UniversityScrapyItem()
-        university['name'] = 'University of Western Australia'
-        university['ch_name'] = '西澳大學'
-        university['course_name'] = response.meta.get('course_name')
-        university['min_tuition_fee'] = fee_2025
-        university['location'] =  response.meta.get('location')
-        university['english_requirement'] = target_paragraph
+        university['university_id'] = 42
+        university['name'] = response.meta.get('course_name')
+        university['min_fee'] = fee_2025
+        university['max_fee'] = fee_2025
+        university['campus'] =  response.meta.get('campus')
+        university['eng_req'] = total_score
+        university['eng_req_info'] = target_paragraph
         university['duration'] = duration
+        university['duration_info'] = duration_int
+        university['degree_level_id'] = degree_level_id
         university['course_url'] = response.url
 
         yield university
