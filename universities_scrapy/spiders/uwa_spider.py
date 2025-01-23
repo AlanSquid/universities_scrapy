@@ -5,8 +5,6 @@ import re
 class UwaSpider(scrapy.Spider):
     name = "uwa_spider"
     allowed_domains = ["www.uwa.edu.au", "www.search.uwa.edu.au"]
-    # start_urls = ["https://www.search.uwa.edu.au/s/search.html?collection=uwa~sp-search&f.Level+of+study%7CcourseStudyLevel=undergraduate&f.International%7Cinternational=Available+to+International+Students&f.Tabs%7Ccourses=Courses&num_ranks=100&sort="]
-    # start_urls = ["https://www.search.uwa.edu.au/s/search.html?f.Tabs%7Ccourses=Courses&num_ranks=100&f.Level+of+study%7CcourseStudyLevel=undergraduate&f.Level+of+study%7CcourseStudyLevel=postgraduate&f.International%7Cinternational=Available+to+International+Students&collection=uwa%7Esp-search&sort="]
     start_urls = ["https://www.search.uwa.edu.au/s/search.html?f.Tabs%7Ccourses=Courses&query=&f.International%7Cinternational=Available+to+International+Students&collection=uwa%7Esp-search"]
 
     full_data=[]
@@ -162,16 +160,14 @@ class UwaSpider(scrapy.Spider):
             target_paragraph = None
         # 取得duration
         course_details = response.css('div#course-details')
-        duration_int = course_details.xpath(
-            # './/div[contains(@class, "card-details-dynamic")]//div[@class="card-details-label" and text()="Full time/part time duration"]/following-sibling::div[@class="card-details-value"]//li/text()'
-            # './/div[contains(@class, "card-details-dynamic")]//div[@class="card-details-label" and re:match(., "full time/part time duration", "i")]/following-sibling::div[@class="card-details-value"]//li/text()'
-            './/div[contains(@class, "card-details-dynamic")]//div[re:match(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "full time/part time duration", "i")]/following-sibling::div[@class="card-details-value"]//li/text()'
+        duration_info = course_details.xpath(
+           './/div[contains(@class, "card-details-dynamic")]//div[re:match(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "full time/part time duration", "i")]/following-sibling::div[@class="card-details-value"]//li/text()'
         ).get()
 
-        if duration_int:
-            duration_int = duration_int.replace('\n', ' ').strip()
+        if duration_info:
+            duration_info = duration_info.replace('\n', ' ').strip()
         
-        duration = self.normalize_duration(duration_int)
+        duration = self.normalize_duration(duration_info)
        
         # 把資料存入 university Item
         university = UniversityScrapyItem()
@@ -183,7 +179,7 @@ class UwaSpider(scrapy.Spider):
         university['eng_req'] = total_score
         university['eng_req_info'] = target_paragraph
         university['duration'] = duration
-        university['duration_info'] = duration_int
+        university['duration_info'] = duration_info
         university['degree_level_id'] = degree_level_id
         university['course_url'] = response.url
 

@@ -5,8 +5,7 @@ import re
 class UnisaSpiderSpider(scrapy.Spider):
     name = "unisa_spider"
     allowed_domains = ["www.unisa.edu.au", "www.search.unisa.edu.au", "www.i.unisa.edu.au/"]
-    start_urls = ["https://search.unisa.edu.au/s/search.html?collection=study-search&query=&f.Tabs%7Ctab=Degrees+%26+Courses&f.Student+Type%7CpmpProgramsStudentType=International&f.Study+Type%7CstudyType=Degree&f.Level+of+study%7CfacetLevelStudy=Undergraduate"]
-                  
+    start_urls = ['https://search.unisa.edu.au/s/search.html?collection=study-search&query=&f.Tabs%7Ctab=Degrees+%26+Courses&f.Student+Type%7CpmpProgramsStudentType=International&f.Study+Type%7CstudyType=Degree&f.Level+of+study%7CfacetLevelStudy=Postgraduate&f.Level+of+study%7CfacetLevelStudy=Undergraduate&f.Mode+of+study%7CpmpProgramsModeOfStudy=On-campus%2FOnline&f.Mode+of+study%7CpmpProgramsModeOfStudy=On-campus']
     all_course_url = []
 
     def parse(self, response):
@@ -14,7 +13,15 @@ class UnisaSpiderSpider(scrapy.Spider):
         for card in cards: 
             url = card.css("h3 a::attr(href)").get()
             course_url = response.urljoin(url)
+            # 跳過 Graduate Certificate, Graduate Diploma
+            course_name = card.css("h3 a::text").get().strip() 
+            # 跳過雙學位, Honours, Online, Graduate Certificate, Diploma
+            skip_keywords = ["Doctor of", "Honours", "Online", "Graduate Certificate", "Diploma"]
+            keywords = ["Bachelor of", "Master of", "Doctor of"]
+            if not course_name or any(keyword in course_name for keyword in skip_keywords) or sum(course_name.count(keyword) for keyword in keywords) >= 2:
+                continue  
             self.all_course_url.append(course_url)
+
         next_page = None
         # 檢查下一頁
         next_page = response.css('a.page-num[rel="Next"]::attr(href)').get()
@@ -30,7 +37,19 @@ class UnisaSpiderSpider(scrapy.Spider):
         try:
             # 取得課程名稱
             course_name = response.css('.title-row h1::text').get().strip()    
+            # 刪除course_name
 
+            name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()    
+            degree_level = response.css('p').xpath(
+                './span[contains(text(), "Degree Level")]/following-sibling::text()'
+            ).get().strip()            
+            degree_level_id = None 
+            if (degree_level):
+                if "Undergraduate" in degree_level :
+                    degree_level_id = 1
+                elif "Postgraduate" in degree_level:
+                    degree_level_id = 2 
+          
             location = response.xpath(
                 "//div[contains(@class, 'columns medium-4')]//span[contains(text(), 'Campus')]/../../..//a/span/text()"
             ).get()
@@ -44,8 +63,17 @@ class UnisaSpiderSpider(scrapy.Spider):
                     location = None
             
             # 取得duration
-            duration = response.xpath("//span[contains(text(), 'Duration')]/ancestor::p/span/following-sibling::br/following-sibling::text()").get().strip()
-            
+            duration_info = response.xpath("//span[contains(text(), 'Duration')]/ancestor::p/span/following-sibling::br/following-sibling::text()").get().strip()
+            if duration_info:
+                match = re.search(r'\d+(\.\d+)?', duration_info)  # 使用正則表達式查找數字
+                if match:
+                    duration = float(match.group())  # 提取匹配內容並轉換為 float
+                else:
+                    duration = None  # 如果沒有匹配到數字
+            else:
+                duration_info = None
+                duration = None 
+
             # 取得英文門檻
             english_info = response.xpath("//span[contains(text(), 'English Language Requirements')]/following-sibling::ul/li/text()").getall()
             pattern = r"IELTS total \[(\d+\.?\d*)\]|IELTS reading \[(\d+\.?\d*)\]|IELTS writing \[(\d+\.?\d*)\]|IELTS speaking \[(\d+\.?\d*)\]|IELTS listening \[(\d+\.?\d*)\]"
@@ -65,7 +93,8 @@ class UnisaSpiderSpider(scrapy.Spider):
             if speaking: parts.append(f"口說 {speaking}")
             if listening: parts.append(f"聽力 {listening}")
             english_requirement = f"{parts[0]} ({'，'.join(parts[1:])})" if len(parts) > 1 else parts[0] if parts else ""
-            
+            eng_req = total
+
             # 取得學費
             fees_info = response.xpath(
                 "//div[contains(@class, 'icon-block-horizontal')]//span[contains(text(), 'Fees')]/following::span[contains(text(), 'AUD')]/text()"
@@ -81,14 +110,18 @@ class UnisaSpiderSpider(scrapy.Spider):
 
 
             university = UniversityScrapyItem()
-            university['name'] = 'University of South Australia'
-            university['ch_name'] = '南澳大學'
-            university['course_name'] = course_name
-            university['min_tuition_fee'] = tuition_fee
-            university['english_requirement'] = english_requirement
-            university['location'] = location
+            university['university_id'] = 25
+            university['name'] = name
+            university['min_fee'] = tuition_fee
+            university['max_fee'] = tuition_fee
+            university['eng_req'] = eng_req
+            university['eng_req_info'] = english_requirement
+            university['campus'] = location
             university['duration'] = duration
+            university['duration_info'] = duration_info
             university['course_url'] = response.url
+            university['degree_level_id'] = degree_level_id
+
             yield university
         except Exception as e:
             self.logger.error(f"Error parsing page {response.url}: {e}")

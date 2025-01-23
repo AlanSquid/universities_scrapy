@@ -5,21 +5,13 @@ import re
 class JcuSpiderSpider(scrapy.Spider):
     name = "jcu_spider"
     allowed_domains = ["www.jcu.edu.au"]
-    # courese_urls = "https://www.jcu.edu.au/courses/_config/ajax-items/global-funnelback-results-dev?SQ_ASSET_CONTENTS_RAW&bodyDesignType=default&collection=jcu-v1-courses&query=Bachelor&num_ranks=1001&pagination=all&sort=&meta_studyLevel_sand=Undergraduate&meta_courseAvailability_orsand=both+int_only"
     courese_urls = "https://www.jcu.edu.au/courses/_config/ajax-items/global-funnelback-results-dev?SQ_ASSET_CONTENTS_RAW&bodyDesignType=default&collection=jcu-v1-courses&query=!null&num_ranks=1001&pagination=all&sort=metacourseSort&meta_courseAvailability_orsand=both+int_only"
-    # 這是english_requirement_url
+    
+    # english_requirement_url
     start_urls = ["https://www.jcu.edu.au/policy/academic-governance/student-experience/admissions-policy-schedule-ii"]
     acad_req_url = "https://www.jcu.edu.au/applying-to-jcu/international-applications/academic-and-english-language-entry-requirements/country-specific-academic-levels"
     all_course_url=[]
     english_levels = {}
-    # english_levels = {
-    #     "Band P": "IELTS 5.5 (單科不低於 5.0)",
-    #     "Band 1": "IELTS 6 (單科不低於 6.0)",
-    #     "Band 2": "IELTS 6.5 (單科不低於 6.0)",
-    #     "Band 3a": "IELTS 7.0 (單科不低於 6.5)",
-    #     "Band 3b": "IELTS 7.5 (三項不低於 7.0，一項不得低於 6.5)",
-    #     "Band 3c": "IELTS 7.5 (單科不低於 7.0)",
-    # }
 
     def parse(self, response):
         # 處理英文門檻
