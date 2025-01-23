@@ -5,21 +5,13 @@ import re
 class JcuSpiderSpider(scrapy.Spider):
     name = "jcu_spider"
     allowed_domains = ["www.jcu.edu.au"]
-    courese_urls = "https://www.jcu.edu.au/courses/_config/ajax-items/global-funnelback-results-dev?SQ_ASSET_CONTENTS_RAW&bodyDesignType=default&collection=jcu-v1-courses&query=Bachelor&num_ranks=1001&pagination=all&sort=&meta_studyLevel_sand=Undergraduate&meta_courseAvailability_orsand=both+int_only"
-                  
-    # 這是english_requirement_url
+    courese_urls = "https://www.jcu.edu.au/courses/_config/ajax-items/global-funnelback-results-dev?SQ_ASSET_CONTENTS_RAW&bodyDesignType=default&collection=jcu-v1-courses&query=!null&num_ranks=1001&pagination=all&sort=metacourseSort&meta_courseAvailability_orsand=both+int_only"
+    
+    # english_requirement_url
     start_urls = ["https://www.jcu.edu.au/policy/academic-governance/student-experience/admissions-policy-schedule-ii"]
-    academic_requirement_url = "https://www.jcu.edu.au/applying-to-jcu/international-applications/academic-and-english-language-entry-requirements/country-specific-academic-levels"
+    acad_req_url = "https://www.jcu.edu.au/applying-to-jcu/international-applications/academic-and-english-language-entry-requirements/country-specific-academic-levels"
     all_course_url=[]
     english_levels = {}
-    # english_levels = {
-    #     "Band P": "IELTS 5.5 (單科不低於 5.0)",
-    #     "Band 1": "IELTS 6 (單科不低於 6.0)",
-    #     "Band 2": "IELTS 6.5 (單科不低於 6.0)",
-    #     "Band 3a": "IELTS 7.0 (單科不低於 6.5)",
-    #     "Band 3b": "IELTS 7.5 (三項不低於 7.0，一項不得低於 6.5)",
-    #     "Band 3c": "IELTS 7.5 (單科不低於 7.0)",
-    # }
 
     def parse(self, response):
         # 處理英文門檻
@@ -61,19 +53,27 @@ class JcuSpiderSpider(scrapy.Spider):
                         if three_components_score_match and one_component_score_match:
                             three_score = three_components_score_match.group(1)
                             one_score = one_component_score_match.group(1)
-                            english_desc = f"IELTS 7.5 (三項不低於 {three_score}，一項不得低於 {one_score})"
+                            
+                            english_desc = f"IELTS {overall_score} (三項不低於 {three_score}，一項不得低於 {one_score})"
                 
                 band_name = band_name.strip()
-                self.english_levels[band_name] = english_desc
+                self.english_levels[band_name] = {
+                    "eng_req": overall_score,
+                    "eng_req_info": english_desc
+                }
+                # self.english_levels[band_name] = english_desc
                 yield response.follow(self.courese_urls, self.cards_parse)
 
     def cards_parse(self, response):
         cards = response.css(".jcu-v1__search__result")
         for card in cards: 
             course_title = card.css(".jcu-v1__search__result--title a.jcu-v1__search__heading::text").get()
-            # 去掉不是Bachelor的course
-            if not course_title or "Bachelor" not in course_title:
-                # print(course_title)
+    
+            # 跳過雙學位, Honours, Online, Graduate Certificate, Diploma
+            skip_keywords = ["Doctor of", "Honours", "Graduate Certificate", "Diploma"]
+            keywords = ["Bachelor of", "Master of"]
+            if not course_title or any(keyword in course_title for keyword in skip_keywords) or sum(course_title.count(keyword) for keyword in keywords) >= 2:
+                # print('跳過:',course_title)
                 continue
             url = card.css("a::attr(href)").get()
             self.all_course_url.append(url)
@@ -81,33 +81,53 @@ class JcuSpiderSpider(scrapy.Spider):
             
     def page_parse(self, response):
         course_name = response.css("h1.course-banner__title::text").get()
+        degree_level_id=None
+        if "bachelor" in course_name.lower():
+            degree_level_id = 1
+        elif "master" in course_name.lower(): 
+            degree_level_id = 2
+        name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
+
         campuses = response.css('.course-fast-facts__location-list-item a.course-fast-facts__location-link::text').getall()
         campuses = [campus.strip() for campus in campuses if campus.strip()]
         location = ', '.join(campuses)
-        duration = response.css(".course-fast-facts__tile.fast-facts-duration p::text").get()
+        duration_info = response.css(".course-fast-facts__tile.fast-facts-duration p::text").get()
+        if duration_info:
+            match = re.search(r'\d+(\.\d+)?', duration_info)  # 使用正則表達式查找數字
+            if match:
+                duration = float(match.group())  # 提取匹配內容並轉換為 float
+            else:
+                duration = None  # 如果沒有匹配到數字
+        else:
+            duration_info = None
+            duration = None 
         tuition_fee = response.css(".course-fast-facts__tile.fast-facts-fees p::text").get()
         match = re.search(r'\d+(?:,\d+)*(\.\d+)?', tuition_fee)
         if match:
             fee = match.group(0)  
             fee = fee.replace(',', '')  
-
+        else:
+            fee = None
         english_level = response.css('.course-fast-facts__tile__body-top p::text').re_first(r'Band\s\w+')
         english = self.english_requirement(english_level)
 
         university = UniversityScrapyItem()
-        university['name'] = 'James Cook University'
-        university['ch_name'] = '詹姆士庫克大學'
-        university['course_name'] = course_name  
-        university['min_tuition_fee'] = fee
-        university['english_requirement'] = english
-        university['location'] = location
+        university['university_id'] = 19
+        university['name'] = name  
+        university['min_fee'] = fee
+        university['max_fee'] = fee
+        university['eng_req'] = english['eng_req']
+        university['eng_req_info'] = english['eng_req_info']
+        university['campus'] = location
         university['duration'] = duration
+        university['duration_info'] = duration_info
+        university['degree_level_id'] = degree_level_id
         university['course_url'] = response.url
-        university['english_requirement_url'] = self.start_urls
-        university['academic_requirement_url'] = self.academic_requirement_url
+        university['eng_req_url'] = self.start_urls
+        university['acad_req_url'] = self.acad_req_url
 
         yield university
-        
+ 
     def english_requirement(self, english_level):
         if english_level:
             return self.english_levels.get(english_level, self.english_levels['Band P'])
