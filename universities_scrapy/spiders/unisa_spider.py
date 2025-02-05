@@ -37,9 +37,8 @@ class UnisaSpiderSpider(scrapy.Spider):
         try:
             # 取得課程名稱
             course_name = response.css('.title-row h1::text').get().strip()    
-            # 刪除course_name
-
-            name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()    
+            # name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip() 
+   
             degree_level = response.css('p').xpath(
                 './span[contains(text(), "Degree Level")]/following-sibling::text()'
             ).get().strip()            
@@ -50,11 +49,16 @@ class UnisaSpiderSpider(scrapy.Spider):
                 elif "Postgraduate" in degree_level:
                     degree_level_id = 2 
           
+            # 取得location
             location = response.xpath(
                 "//div[contains(@class, 'columns medium-4')]//span[contains(text(), 'Campus')]/../../..//a/span/text()"
             ).get()
+
+            if location is None:
+                location = response.xpath(
+                    "//div[contains(@class, 'columns medium-4')]//span[contains(text(), 'Campus')]/../../..//span[2]/text()"
+                ).get()
             
-            # 取得location
             if location is None:
                 online = response.css("span.badge.small-margin-bottom::text").get()
                 if online and "Online" in online:
@@ -93,6 +97,7 @@ class UnisaSpiderSpider(scrapy.Spider):
             if speaking: parts.append(f"口說 {speaking}")
             if listening: parts.append(f"聽力 {listening}")
             english_requirement = f"{parts[0]} ({'，'.join(parts[1:])})" if len(parts) > 1 else parts[0] if parts else ""
+            english_requirement = english_requirement if english_requirement else None
             eng_req = total
 
             # 取得學費
@@ -111,7 +116,7 @@ class UnisaSpiderSpider(scrapy.Spider):
 
             university = UniversityScrapyItem()
             university['university_id'] = 25
-            university['name'] = name
+            university['name'] = course_name
             university['min_fee'] = tuition_fee
             university['max_fee'] = tuition_fee
             university['eng_req'] = eng_req

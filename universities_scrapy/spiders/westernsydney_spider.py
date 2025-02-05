@@ -6,12 +6,14 @@ from universities_scrapy.items import UniversityScrapyItem
 class WesternsydneySpiderSpider(scrapy.Spider):
     name = "westernsydney_spider"
     allowed_domains = ["www.westernsydney.edu.au"]
+    # 搜尋courses頁面: https://www.westernsydney.edu.au/future/study/courses 
     start_urls = ["https://www.westernsydney.edu.au/content/wsu-international/jcr:content/courseFilter.json?available-for=international-students&course-level=postgraduate,undergraduate"]
     all_course_url=[]
     english_requirement_url = 'https://www.westernsydney.edu.au/international/studying/entry-requirements'
    
     def parse(self, response):
-        data = response.json()  # api 回來是 json格是
+        data = response.json()  
+        # api 回傳格式
         # {"coursePageUrl":"https://www.westernsydney.edu.au/future/study/courses/undergraduate/bachelor-of-international-studies-bachelor-of-social-science",
         #  "courseColour":"#ED0033",
         #  "courseLevel":"undergraduate",
@@ -33,12 +35,12 @@ class WesternsydneySpiderSpider(scrapy.Spider):
 
     def page_parse(self, response):
         course_name = response.css("h1.cmp-title__text::text").get().strip()
-        name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
+        # name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
         degree_level_id = None
 
-        if "bachelor" in course_name.lower():
+        if "undergraduate" in response.url.lower():
             degree_level_id = 1
-        elif "master" in course_name.lower(): 
+        elif "postgraduate" in response.url.lower(): 
             degree_level_id = 2
 
         duration_info = response.css(".course_duration_info_box p.course_duration_time::text").get().strip()
@@ -77,7 +79,7 @@ class WesternsydneySpiderSpider(scrapy.Spider):
 
         university = UniversityScrapyItem()
         university['university_id'] = 12
-        university['name'] = name  
+        university['name'] = course_name  
         university['min_fee'] = tuition_fee
         university['max_fee'] = tuition_fee
         university['eng_req'] = english['eng_req']
@@ -85,9 +87,9 @@ class WesternsydneySpiderSpider(scrapy.Spider):
         university['campus'] = location
         university['duration'] = duration
         university['duration_info'] = duration_info
+        university['degree_level_id'] = degree_level_id
         university['course_url'] = response.url
         university['eng_req_url'] = self.english_requirement_url
-        university['degree_level_id'] = degree_level_id
 
         yield university
 

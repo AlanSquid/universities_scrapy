@@ -18,7 +18,7 @@ class CurtinSpider(scrapy.Spider):
         cards = response.css("div.search-card")
         for card in cards: 
             full_link = card.css("a::attr(href)").get()
-            name = card.css("a::text").get().strip()
+            # name = card.css("a::text").get().strip()
             self.full_link_list.append(full_link)
 
         # # 檢查是否有下一頁
@@ -52,7 +52,7 @@ class CurtinSpider(scrapy.Spider):
             # 取得課程標題
             page = scrapy.Selector(text=driver.page_source)
             course_name = page.css('h1.offering-overview__hero__title::text').get().strip() 
-            name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
+            # name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
             degree_level = page.css('h2.offering-overview__hero__award::text').get().strip() 
             if (degree_level):
                 if "Bachelor degree" in degree_level :
@@ -103,17 +103,29 @@ class CurtinSpider(scrapy.Spider):
 
             # 取得英文門檻
             eng_req_info = None
-            english_rows = page.css("div.english-table_row")
+            english_rows = page.css("div[data-applicant-type='english-proficiency'] div.english-table_row")
+
+            # english_rows = page.css("div.english-table_row")
+            overall_score = None
+            individual_scores = []
+
             if english_rows:  
                 for row in english_rows:
                     cols = row.css("p")
                     if cols and "Overall band score" in cols[0].css("::text").get():
-                        eng_req_info = f"IELTS {cols[1].css('::text').get().strip()}"
-                        eng_req = cols[1].css('::text').get().strip()
-                        break
+                        overall_score = cols[1].css('::text').get().strip()
+                    elif cols:
+                        individual_scores.append(f"{cols[0].css('::text').get().strip()} {cols[1].css('::text').get().strip()}")
+
+            if overall_score:
+                eng_req = overall_score
+                if individual_scores:
+                    eng_req_info = f"IELTS {overall_score} ({', '.join(individual_scores)})"
+                else:
+                    eng_req_info = f"IELTS {overall_score}"
             else:
                 eng_req_info = None
-                eng_req= None
+                eng_req = None
             # 取得費用
             tuition_fee_format = None
             if page.xpath("//div[contains(@class, 'fees-charges__box') and contains(@class, 'purple')]/p[contains(text(), 'Fee information is not available for this course at this time')]"):
@@ -129,7 +141,7 @@ class CurtinSpider(scrapy.Spider):
    
             university = UniversityScrapyItem()
             university['university_id'] = 39
-            university['name'] = name  
+            university['name'] = course_name  
             university['min_fee'] = tuition_fee_format
             university['max_fee'] = tuition_fee_format
             university['eng_req'] = eng_req
@@ -137,8 +149,8 @@ class CurtinSpider(scrapy.Spider):
             university['campus'] = location_format
             university['duration'] = duration
             university['duration_info'] = duration_info
-            university['course_url'] = link
             university['degree_level_id'] = degree_level_id
+            university['course_url'] = link
 
             yield university
             

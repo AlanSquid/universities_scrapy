@@ -8,6 +8,7 @@ class UtsSpider(scrapy.Spider):
     start_urls = ["https://www.uts.edu.au/study/find-a-course/search?search="]
     english_requirement_url = 'https://www.uts.edu.au/study/international/essential-information/english-language-requirements'
     academic_requirement_url = 'https://www.uts.edu.au/study/international/essential-information/academic-requirements'
+    fee_detail_url = 'https://cis.uts.edu.au/fees/course-fees.cfm'
     all_course_url = []
     skipped_courses_count = 0
 
@@ -33,10 +34,11 @@ class UtsSpider(scrapy.Spider):
         # 如果請求失敗並返回 503，則處理此錯誤
         if failure.check(scrapy.exceptions.IgnoreRequest):
             self.skipped_courses_count += 1
-            print(f"Skipping due to 503 error: {failure.request.url}")
+            # print(f"Skipping due to 503 error: {failure.request.url}")
 
     def page_parse(self, response):
         course_name = response.css('.page-title h1::text').get().strip()    
+
         locations = response.css('.block.block-dddd.block-dddd-view-modeluts-course-course__location p::text').get()
         if locations :
             locations.strip()
@@ -109,6 +111,8 @@ class UtsSpider(scrapy.Spider):
         university['course_url'] = response.meta['course_url']
         university['acad_req_url'] = self.academic_requirement_url
         university['eng_req_url'] = self.english_requirement_url
+        university['fee_detail_url'] = self.fee_detail_url
+
         yield university
 
     def english_requirement(self, course_name):
@@ -138,4 +142,5 @@ class UtsSpider(scrapy.Spider):
 
     def closed(self, reason):    
         valid_courses_count = len(self.all_course_url) - self.skipped_courses_count
-        print(f'{self.name}爬蟲完成!\n雪梨科技大學, 共有 {valid_courses_count} 筆資料\n跳過 {self.skipped_courses_count} 筆資料')
+        print(f'{self.name}爬蟲完成!\n雪梨科技大學, 共有 {valid_courses_count} 筆資料(已扣除不開放申請)\n有 {self.skipped_courses_count} 筆目前不開放申請\n')
+
