@@ -86,7 +86,7 @@ class JcuSpiderSpider(scrapy.Spider):
             degree_level_id = 1
         elif "master" in course_name.lower(): 
             degree_level_id = 2
-        name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
+        # name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
 
         campuses = response.css('.course-fast-facts__location-list-item a.course-fast-facts__location-link::text').getall()
         campuses = [campus.strip() for campus in campuses if campus.strip()]
@@ -113,7 +113,7 @@ class JcuSpiderSpider(scrapy.Spider):
 
         university = UniversityScrapyItem()
         university['university_id'] = 19
-        university['name'] = name  
+        university['name'] = course_name  
         university['min_fee'] = fee
         university['max_fee'] = fee
         university['eng_req'] = english['eng_req']

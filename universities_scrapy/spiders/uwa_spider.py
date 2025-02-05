@@ -8,7 +8,6 @@ class UwaSpider(scrapy.Spider):
     start_urls = ["https://www.search.uwa.edu.au/s/search.html?f.Tabs%7Ccourses=Courses&query=&f.International%7Cinternational=Available+to+International+Students&collection=uwa%7Esp-search"]
 
     full_data=[]
-    
     def parse(self, response):
         cards = response.css("div.listing-item__content")
         for card in cards: 
@@ -23,12 +22,12 @@ class UwaSpider(scrapy.Spider):
                 continue
 
             # 刪除 master of 和 bachelor of
-            name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
+            # name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
          
             campus = card.css("dt:contains('Location:') + dd::text").get()
             self.full_data.append({
                 'url':url,
-                'course_name':name,
+                'course_name':course_name,
                 'campus':campus
             })
 
@@ -38,7 +37,7 @@ class UwaSpider(scrapy.Spider):
             yield response.follow(next_page, self.parse)       
         else:
             # print(f'共有 {len(self.full_data)} 筆資料')
-            for data in self.full_data:
+            for data in self.full_data[:10]:
                 yield response.follow(data['url'], self.page_parse, meta={'campus': data['campus'],'course_name':data['course_name']})
 
     def normalize_duration(self, duration):
@@ -123,18 +122,31 @@ class UwaSpider(scrapy.Spider):
                 fee_2025 = round(fee_2025, 2)  # 有小數部分，保留兩位小數
 
         # 提取 "English competency" 部分的所有段落
-        admission_requirement = response.css('div#admission-requirements')
+        admission_requirement = response.css('div')
+    
         english_card = admission_requirement.css('div.course-detail.card').xpath(
-            './/h3[contains(text(), "English competency")]/following-sibling::div[@class="card-container"]'
+            './/h3[contains(translate(text(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "english competency") or '
+            'contains(translate(text(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "english language requirements")]/following-sibling::div[@class="card-container"]'
         )
-        full_text = " ".join(english_card.css('div.card-content.rich-text-content p::text').getall()).strip()
+        paragraphs = english_card.css('div.card-content.rich-text-content p::text').getall()
+        lists = english_card.css('div.card-content.rich-text-content ul li::text').getall()
 
+        full_text = " ".join(paragraphs + lists).strip()
+        
         pattern = re.compile(
-            r"(Minimum overall IELTS score of (\d+\.?\d*), with no band less than (\d+\.?\d*))|"
-            r"Applicants presenting with the IELTS Academic require an overall score of at least (\d+\.?\d*), "
-            r"a minimum (\d+\.?\d*) in the reading and writing bands, and a minimum score of (\d+\.?\d*) "
-            r"in the listening and speaking bands(?:\s*For more information visit.*)?"
+            r"(?i)"  # 忽略大小寫
+            r"(?:minimum\s+score\s+of\s+(\d+\.?\d*)\s+overall\s+with\s+at\s+least\s+(\d+\.?\d*)\s+in\s+each\s+section)|"
+            r"(?:minimum\s+overall\s+ielts\s+score\s+(?:of\s+)?(\d+\.?\d*)?,?\s+with\s+no\s+band\s+less\s+than\s+(\d+\.?\d*))|"
+            r"(?:applicants\s+presenting\s+with\s+the\s+ielts\s+academic\s+require\s+an\s+overall\s+score\s+of\s+at\s+least\s+(\d+\.?\d*),?\s+"
+            r"a\s+minimum\s+score\s+of\s+(\d+\.?\d*)\s+in\s+the\s+reading\s+and\s+writing\s+bands,\s+and\s+a\s+minimum\s+score\s+of\s+(\d+\.?\d*)\s+"
+            r"in\s+the\s+listening\s+and\s+speaking\s+bands)|"
+            r"(?:a\s+valid\s+ielts\s+academic\s+overall\s+score\s+of\s+at\s+least\s+(\d+\.?\d*),?\s+"
+            r"a\s+minimum\s+score\s+of\s+(\d+\.?\d*)\s+in\s+the\s+reading\s+and\s+writing\s+bands,\s+"
+            r"and\s+a\s+minimum\s+score\s+of\s+(\d+\.?\d*)\s+in\s+the\s+listening\s+and\s+speaking\s+bands)|"
+            r"(?:applicants\s+presenting\s+with\s+the\s+ielts\s+academic\s+require\s+an\s+overall\s+score\s+of\s+at\s+least\s+(\d+\.?\d*)\s+"
+            r"and\s+no\s+band\s+less\s+than\s+(\d+\.?\d*))"
         )
+       
         # 確保 full_text 不是 None
         if full_text:
             match = pattern.search(full_text)
@@ -142,22 +154,37 @@ class UwaSpider(scrapy.Spider):
             match = None
 
         if match:
-            if match.group(2) and match.group(3):  # 情況 1: 總分與單科要求
-                total_score = match.group(2)
-                single_band_score = match.group(3)
+            if match.group(1) and match.group(2):  # 情況 1: 總分與單科要求
+                total_score = match.group(1)
+                single_band_score = match.group(2)
                 target_paragraph = f"IELTS {total_score} (單科不低於 {single_band_score})"
-            elif match.group(4) and match.group(5) and match.group(6):  # 情況 2: 分別的分數要求
-                total_score = match.group(4)
-                reading_writing_score = match.group(5)
-                listening_speaking_score = match.group(6)
+            elif match.group(3) and match.group(4):  # 情況 2: 總分與單科要求
+                total_score = match.group(3)
+                single_band_score = match.group(4)
+                target_paragraph = f"IELTS {total_score} (單科不低於 {single_band_score})"
+            elif match.group(5) and match.group(6) and match.group(7):  # 情況 3: 不同技能的分數要求
+                total_score = match.group(5)
+                reading_writing_score = match.group(6)
+                listening_speaking_score = match.group(7)
                 target_paragraph = (f"IELTS {total_score} (閱讀和寫作單項不低於 {reading_writing_score}，"
-                                f"聽力和口語不低於 {listening_speaking_score})")
+                                    f"聽力和口語不低於 {listening_speaking_score})")
+            elif match.group(8) and match.group(9) and match.group(10):  # 情況 4:不同技能的分數要求 另一種寫法
+                total_score = match.group(8)
+                reading_writing_score = match.group(9)
+                listening_speaking_score = match.group(10)
+                target_paragraph = (f"IELTS {total_score} (閱讀和寫作不低於 {reading_writing_score}，"
+                                    f"聽力和口語不低於 {listening_speaking_score})")
+            elif match.group(11) and match.group(12):  # 情況 5: 總分與單科要求
+                total_score = match.group(11)
+                single_band_score = match.group(12)
+                target_paragraph = f"IELTS {total_score} (單科不低於 {single_band_score})"
             else:
                 total_score = None
                 target_paragraph = None
         else:
             total_score = None
             target_paragraph = None
+
         # 取得duration
         course_details = response.css('div#course-details')
         duration_info = course_details.xpath(
