@@ -21,15 +21,15 @@ class FlindersSpiderSpider(scrapy.Spider):
 
     def extract_course_url(self, response):
         courses = []
-        # bachelor_urls = (
-        #     response.xpath(
-        #         '//div[@class="course_list_component"]//div[@class="accordion_item"][1]'
-        #     )
-        #     .css("ul.course_list li a::attr(href)")
-        #     .getall()
-        # )
-        # for url in bachelor_urls:
-        #     courses.append({"degree_id": 1, "url": url})
+        bachelor_urls = (
+            response.xpath(
+                '//div[@class="course_list_component"]//div[@class="accordion_item"][1]'
+            )
+            .css("ul.course_list li a::attr(href)")
+            .getall()
+        )
+        for url in bachelor_urls:
+            courses.append({"degree_id": 1, "url": url})
 
         master_urls = (
             response.xpath(
@@ -40,7 +40,11 @@ class FlindersSpiderSpider(scrapy.Spider):
         )
 
         for url in master_urls:
-            courses.append({"degree_id": 2, "url": url})
+            if (
+                "https://handbook.flinders.edu.au/courses/engineering" not in url
+                and "https://handbook.flinders.edu.au/courses/medicine" not in url
+            ):
+                courses.append({"degree_id": 2, "url": url})
 
         for course in courses:
             yield scrapy.Request(
@@ -56,14 +60,11 @@ class FlindersSpiderSpider(scrapy.Spider):
                 ),
             )
 
-        # self.course_urls += urls
-        # self.course_urls = list(set(self.course_urls))
-
     def parse_bachelor_page(self, response):
         # 抓課程名稱
         course_name = response.css("h1.yellow_heading::text").get()
         keywords = ["Bachelor"]
-        except_keywords = ["(Honours)"]
+        except_keywords = ["(Honours)", "Master of"]
 
         if not (
             any(course_name.count(keyword) == 1 for keyword in keywords)
@@ -138,8 +139,10 @@ class FlindersSpiderSpider(scrapy.Spider):
         yield university
 
     def parse_master_page(self, response):
-        print('==========', response.url)
-        course_sections = response.css(".dom-int-toggle-component.parbase ~ div.section")
+        print("==========", response.url)
+        course_sections = response.css(
+            ".dom-int-toggle-component.parbase ~ div.section"
+        )
         classname_keywords = [
             "black_container",
             "gray_dark_container",
@@ -155,39 +158,85 @@ class FlindersSpiderSpider(scrapy.Spider):
                 break
             if target_course_section != []:
                 break
-        master_divs = target_course_section.xpath('.//div[@id and contains(@class, "cmp-text")][p]') if target_course_section != [] else []
+        master_divs = (
+            target_course_section.xpath(
+                './/div[@id and contains(@class, "cmp-text")][p]'
+            )
+            if target_course_section != []
+            else []
+        )
 
         for div in master_divs:
             course_name = div.css(".text_size_large::text").get()
-            if course_name and "Master of" in course_name and " / " not in course_name:
+
+            if (
+                course_name
+                and "Master of" in course_name
+                and " / " not in course_name
+                and "(Research)" not in course_name
+            ):
                 # 課程名稱
-                course_name = course_name.replace('\xa0', ' ')
-                print('course_name:', course_name)
-                details = div.xpath('.//p[strong][count(../p) >= 2]')
+                course_name = course_name.replace("\xa0", " ")
+                # print("course_name:", course_name)
+                details = div.xpath(
+                    ".//p[strong][count(ancestor::div[count(p) >= 2]) > 0]"
+                )
                 for detail in details:
-                    strong_text = detail.css('strong::text').get()
+                    strong_text = detail.css("strong::text").get()
                     # 學制
-                    if 'Duration' in strong_text:
-                        duration_text = detail.css('::text').getall()
-                        duration_str = ''.join(duration_text).replace('\xa0', '').strip()
-                        duration = re.search(r'\d+', duration_str).group()
-                        duration_info = (duration + ' year') if duration == '1' else (duration + ' years')
-                        print('duration:', duration)
-                        print('duration_info:', duration_info)
+                    if "Duration" in strong_text:
+                        duration_text = detail.css("::text").getall()
+                        duration_str = (
+                            "".join(duration_text).replace("\xa0", "").strip()
+                        )
+                        duration = re.search(r"\d+", duration_str).group()
+                        duration_info = (
+                            (duration + " year")
+                            if duration == "1"
+                            else (duration + " years")
+                        )
+                        # print("duration:", duration)
+                        # print("duration_info:", duration_info)
                     # 地區
-                    elif 'Location' in strong_text:
-                        location_text = detail.css('::text').getall()
-                        location_text = [text.strip() for text in location_text if text.strip() and text.strip() != strong_text]
-                        campus = ', '.join(location_text)
-                        print('campus:', campus)
+                    elif "Location" in strong_text:
+                        location_text = detail.css("::text").getall()
+                        location_text = [
+                            text.strip()
+                            for text in location_text
+                            if text.strip() and text.strip() != strong_text
+                        ]
+                        campus = ", ".join(location_text)
+                        # print("campus:", campus)
                     # 學費
-                    elif 'fees' in strong_text:
-                        fee_text = detail.css('::text').getall()
-                        fee_text = ''.join(fee_text).replace(strong_text, '').replace(',', '').strip()
-                        match = re.search(r'\$(\d+)', fee_text)
+                    elif "fees" in strong_text:
+                        fee_text = detail.css("::text").getall()
+                        fee_text = (
+                            "".join(fee_text)
+                            .replace(strong_text, "")
+                            .replace(",", "")
+                            .strip()
+                        )
+                        match = re.search(r"\$(\d+)", fee_text)
                         if match:
                             tuition_fee = match.group(1)
-                        print('tuition_fee:', tuition_fee)
+                            # print("tuition_fee:", tuition_fee)
+
+                    # 把資料存入 university Item
+                    university = UniversityScrapyItem()
+                    university["university_id"] = 26
+                    university["name"] = course_name
+                    university["degree_level_id"] = 2
+                    university["course_url"] = response.url
+                    university["min_fee"] = tuition_fee if tuition_fee else None
+                    university["max_fee"] = tuition_fee if tuition_fee else None
+                    university["eng_req"] = 6.5
+                    university["eng_req_info"] = "IELTS 6.5"
+                    university["duration"] = duration
+                    university["duration_info"] = duration_info
+                    university["campus"] = campus
+                    university["eng_req_url"] = 'https://www.flinders.edu.au/international/apply/entry-requirements/english-language-requirements'
+                    self.course_count += 1
+                    yield university
 
     def closed(self, reason):
         print(f"{self.name}爬蟲完成!")
