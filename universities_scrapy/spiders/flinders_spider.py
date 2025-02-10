@@ -45,7 +45,7 @@ class FlindersSpiderSpider(scrapy.Spider):
                 and "https://handbook.flinders.edu.au/courses/medicine" not in url
             ):
                 courses.append({"degree_id": 2, "url": url})
-
+                
         for course in courses:
             yield scrapy.Request(
                 url=course["url"],
@@ -139,7 +139,12 @@ class FlindersSpiderSpider(scrapy.Spider):
         yield university
 
     def parse_master_page(self, response):
-        print("==========", response.url)
+        # print("==========", response.url)
+        tuition_fee = None
+        duration = None
+        duration_info = None
+        campus = None
+        
         course_sections = response.css(
             ".dom-int-toggle-component.parbase ~ div.section"
         )
@@ -165,10 +170,8 @@ class FlindersSpiderSpider(scrapy.Spider):
             if target_course_section != []
             else []
         )
-
         for div in master_divs:
             course_name = div.css(".text_size_large::text").get()
-
             if (
                 course_name
                 and "Master of" in course_name
@@ -177,19 +180,20 @@ class FlindersSpiderSpider(scrapy.Spider):
             ):
                 # 課程名稱
                 course_name = course_name.replace("\xa0", " ")
-                # print("course_name:", course_name)
-                details = div.xpath(
-                    ".//p[strong][count(ancestor::div[count(p) >= 2]) > 0]"
-                )
+
+                details = div.css('p')
+                if len(div.css('p')) == 1:
+                    details = div.xpath('../following-sibling::div[1]/div/p')
                 for detail in details:
                     strong_text = detail.css("strong::text").get()
+                    second_strong_text = detail.css("strong:nth-of-type(2)::text").get()
                     # 學制
-                    if "Duration" in strong_text:
+                    if strong_text and "Duration" in strong_text:
                         duration_text = detail.css("::text").getall()
                         duration_str = (
                             "".join(duration_text).replace("\xa0", "").strip()
                         )
-                        duration = re.search(r"\d+", duration_str).group()
+                        duration = re.search(r"\d+(\.\d+)?", duration_str).group()
                         duration_info = (
                             (duration + " year")
                             if duration == "1"
@@ -198,7 +202,7 @@ class FlindersSpiderSpider(scrapy.Spider):
                         # print("duration:", duration)
                         # print("duration_info:", duration_info)
                     # 地區
-                    elif "Location" in strong_text:
+                    elif strong_text and "Location" in strong_text:
                         location_text = detail.css("::text").getall()
                         location_text = [
                             text.strip()
@@ -208,7 +212,7 @@ class FlindersSpiderSpider(scrapy.Spider):
                         campus = ", ".join(location_text)
                         # print("campus:", campus)
                     # 學費
-                    elif "fees" in strong_text:
+                    elif strong_text and "fees" in strong_text or (second_strong_text and "fees" in second_strong_text):
                         fee_text = detail.css("::text").getall()
                         fee_text = (
                             "".join(fee_text)
@@ -221,22 +225,22 @@ class FlindersSpiderSpider(scrapy.Spider):
                             tuition_fee = match.group(1)
                             # print("tuition_fee:", tuition_fee)
 
-                    # 把資料存入 university Item
-                    university = UniversityScrapyItem()
-                    university["university_id"] = 26
-                    university["name"] = course_name
-                    university["degree_level_id"] = 2
-                    university["course_url"] = response.url
-                    university["min_fee"] = tuition_fee if tuition_fee else None
-                    university["max_fee"] = tuition_fee if tuition_fee else None
-                    university["eng_req"] = 6.5
-                    university["eng_req_info"] = "IELTS 6.5"
-                    university["duration"] = duration
-                    university["duration_info"] = duration_info
-                    university["campus"] = campus
-                    university["eng_req_url"] = 'https://www.flinders.edu.au/international/apply/entry-requirements/english-language-requirements'
-                    self.course_count += 1
-                    yield university
+                # 把資料存入 university Item
+                university = UniversityScrapyItem()
+                university["university_id"] = 26
+                university["name"] = course_name
+                university["degree_level_id"] = 2
+                university["course_url"] = response.url
+                university["min_fee"] = tuition_fee 
+                university["max_fee"] = tuition_fee 
+                university["eng_req"] = 6.5
+                university["eng_req_info"] = "IELTS 6.5"
+                university["duration"] = duration
+                university["duration_info"] = duration_info
+                university["campus"] = campus
+                university["eng_req_url"] = 'https://www.flinders.edu.au/international/apply/entry-requirements/english-language-requirements'
+                self.course_count += 1
+                yield university
 
     def closed(self, reason):
         print(f"{self.name}爬蟲完成!")
