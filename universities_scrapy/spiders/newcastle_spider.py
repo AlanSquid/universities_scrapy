@@ -123,7 +123,7 @@ class NewcastleSpiderSpider(scrapy.Spider):
         university["max_fee"] = tuition_fee
         university["eng_req"] = overall_min_value
         university["eng_req_info"] = eng_req
-        university["duration"] = re.search(r"\d+", duration).group()
+        university["duration"] = re.search(r"\d+(\.\d+)?", duration).group()
         university["duration_info"] = duration
         university["campus"] = location
         yield university

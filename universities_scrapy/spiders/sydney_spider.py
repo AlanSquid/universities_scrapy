@@ -113,11 +113,11 @@ class SydneySpiderSpider(scrapy.Spider):
                 university["min_fee"] = course_detail["tuition_fee"]
                 university["max_fee"] = course_detail["tuition_fee"]
                 university["eng_req"] = re.search(
-                    r"\d+", course_detail["english_requirement"]
+                    r"\d+(\.\d+)?", course_detail["english_requirement"]
                 ).group()
                 university["eng_req_info"] = course_detail["english_requirement"]
                 university["duration"] = re.search(
-                    r"\d+", course_detail["duration"]
+                    r"\d+(\.\d+)?", course_detail["duration"]
                 ).group()
                 university["duration_info"] = course_detail["duration"]
                 university["campus"] = course_detail["location"]
