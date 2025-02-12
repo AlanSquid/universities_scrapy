@@ -104,7 +104,7 @@ class UqSpiderSpider(scrapy.Spider):
         university['university_id'] = 21
         university['name'] = course_name
         university['min_fee'] = tuition_fee
-        university['min_fee'] = tuition_fee
+        university['max_fee'] = tuition_fee
         university['eng_req'] = eng_req
         university['eng_req_info'] = f'{IELTS_grade_result}'
         university['campus'] = location
