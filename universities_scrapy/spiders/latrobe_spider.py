@@ -31,10 +31,10 @@ class LatrobeSpiderSpider(scrapy.Spider):
                 any(keyword in course_name for keyword in skip_keywords) or \
                 sum(course_name.count(keyword) for keyword in keywords) >= 2 or  \
                 not any(keyword in course_name for keyword in keywords):
-                    print('跳過course:',course_name)
+                    # print('跳過course:',course_name)
                     continue
             url = (url + "#/overview?location=BU&studentType=int&year=2025")
-            print('course:',course_name,",url:",url)
+            # print('course:',course_name,",url:",url)
             self.all_course_url.append(url)
         # 檢查是否有下一頁
         next_page = response.css('a.fb-next-result-page.fb-page-nav::attr(href)').get()
@@ -57,7 +57,7 @@ class LatrobeSpiderSpider(scrapy.Spider):
             try:
                await page.wait_for_selector('div.ds-block', timeout=60000)
             except Exception as e:
-                print(f'超時: {e}，course: {course_name}')
+                # print(f'超時: {e}，course: {course_name}')
                 return
             page_content = scrapy.Selector(text=await page.content())
             fee_text = page_content.css('.fees-estimates p span::text').re_first(r'A\$(\d+(?: \d+)*)')
@@ -75,11 +75,11 @@ class LatrobeSpiderSpider(scrapy.Spider):
             # 出現course-list的頁面不是單一課程，需要跳過
             if page_content.css("div.course-list"):
                 self.except_count += 1
-                print('頁面不是單一課程，跳過',course_name,',url:',response.url)
+                # print('頁面不是單一課程，跳過',course_name,',url:',response.url)
                 return
             if page_content.css("div.breadcrumbs"):
                 self.except_count += 1
-                print('頁面不是單一課程，跳過',course_name,',url:',response.url)
+                # print('頁面不是單一課程，跳過',course_name,',url:',response.url)
                 return
             fee_text = page_content.css('.fees-estimates p span::text').re_first(r'A\$(\d+(?: \d+)*)')
             if fee_text:
@@ -123,7 +123,7 @@ class LatrobeSpiderSpider(scrapy.Spider):
             yield university
             
         except Exception as e:
-            print(f'{response.url}\n此課程錯誤: {e}\n')
+            # print(f'{response.url}\n此課程錯誤: {e}\n')
             self.except_count += 1
 
         finally:
