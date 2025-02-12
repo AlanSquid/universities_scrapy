@@ -37,7 +37,7 @@ class UwaSpider(scrapy.Spider):
             yield response.follow(next_page, self.parse)       
         else:
             # print(f'共有 {len(self.full_data)} 筆資料')
-            for data in self.full_data[:10]:
+            for data in self.full_data:
                 yield response.follow(data['url'], self.page_parse, meta={'campus': data['campus'],'course_name':data['course_name']})
 
     def normalize_duration(self, duration):
@@ -157,27 +157,27 @@ class UwaSpider(scrapy.Spider):
             if match.group(1) and match.group(2):  # 情況 1: 總分與單科要求
                 total_score = match.group(1)
                 single_band_score = match.group(2)
-                target_paragraph = f"IELTS {total_score} (單科不低於 {single_band_score})"
+                target_paragraph = f"IELTS {total_score} (with no band less than {single_band_score})"
             elif match.group(3) and match.group(4):  # 情況 2: 總分與單科要求
                 total_score = match.group(3)
                 single_band_score = match.group(4)
-                target_paragraph = f"IELTS {total_score} (單科不低於 {single_band_score})"
+                target_paragraph = f"IELTS {total_score} (with no band less than {single_band_score})"
             elif match.group(5) and match.group(6) and match.group(7):  # 情況 3: 不同技能的分數要求
                 total_score = match.group(5)
                 reading_writing_score = match.group(6)
                 listening_speaking_score = match.group(7)
-                target_paragraph = (f"IELTS {total_score} (閱讀和寫作單項不低於 {reading_writing_score}，"
-                                    f"聽力和口語不低於 {listening_speaking_score})")
+                target_paragraph = (f"IELTS {total_score} (a minimum score of {reading_writing_score} in the Reading and Writing bands, "
+                                    f"a minimum score of {listening_speaking_score} in the Listening and Speaking bands.)")
             elif match.group(8) and match.group(9) and match.group(10):  # 情況 4:不同技能的分數要求 另一種寫法
                 total_score = match.group(8)
                 reading_writing_score = match.group(9)
                 listening_speaking_score = match.group(10)
-                target_paragraph = (f"IELTS {total_score} (閱讀和寫作不低於 {reading_writing_score}，"
-                                    f"聽力和口語不低於 {listening_speaking_score})")
+                target_paragraph = (f"IELTS {total_score} (a minimum score of {reading_writing_score} in the Reading and Writing bands, "
+                                    f"a minimum score of {listening_speaking_score} in the Listening and Speaking bands.)")
             elif match.group(11) and match.group(12):  # 情況 5: 總分與單科要求
                 total_score = match.group(11)
                 single_band_score = match.group(12)
-                target_paragraph = f"IELTS {total_score} (單科不低於 {single_band_score})"
+                target_paragraph = f"IELTS {total_score} (with no band less than {single_band_score})"
             else:
                 total_score = None
                 target_paragraph = None
