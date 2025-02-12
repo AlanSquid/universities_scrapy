@@ -107,7 +107,7 @@ class UnswSpiderSpider(scrapy.Spider):
             all_subtests_match = re.match(r"(\d+\.\d|\d) in (listening, reading, writing, and speaking|each subtest)", subtest_requirements)
             if all_subtests_match:
                 min_score = all_subtests_match.group(1)
-                english_requirement = f"IELTS {overall_score} (單科不低於 {min_score})"
+                english_requirement = f"IELTS {overall_score} overall (min. {min_score} in each subtest)"
             else:
                 reading_writing_match = re.search(r"(\d+\.\d|\d) in writing & reading", subtest_requirements)
                 speaking_listening_match = re.search(r"(\d+\.\d|\d) in speaking & listening", subtest_requirements)
@@ -115,9 +115,9 @@ class UnswSpiderSpider(scrapy.Spider):
                 if reading_writing_match and speaking_listening_match:
                     reading_writing_min = reading_writing_match.group(1)
                     speaking_listening_min = speaking_listening_match.group(1)
-                    english_requirement = f"IELTS {overall_score} (閱讀和寫作單項不低於 {reading_writing_min}，聽力和口語不低於 {speaking_listening_min})"
+                    english_requirement = f"IELTS {overall_score} overall (min. {reading_writing_min} in writing & reading, {speaking_listening_min} in speaking & listening)"
                 else:
-                    english_requirement = f"IELTS {overall_score} (詳細要求: {subtest_requirements})"
+                    english_requirement = f"IELTS {overall_score} (Detailed requirements: {subtest_requirements})"
         else:
             # print(f"{course_name}的英文格式不匹配，無法解析。{ielts_requirement}")
             english_requirement = None

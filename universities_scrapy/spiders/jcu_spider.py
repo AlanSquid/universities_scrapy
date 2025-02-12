@@ -24,42 +24,43 @@ class JcuSpiderSpider(scrapy.Spider):
         self.english_levels = {}
         
         for band_name, cell in zip(band_names, ielts_cells[1:]):
+            score_and_details = " ".join(cell.xpath('.//p//text()').getall()).strip()
             # 提取單科總分的正則表達式
             overall_score_match = re.search(r'(\d+(?:\.\d+)?)', cell.get())
-            
             # 提取附加條件的正則表達式
-            condition_match = re.search(r'\(([^)]+)\)', cell.get())
+            # condition_match = re.search(r'\(([^)]+)\)', cell.get())
             
             if overall_score_match:
                 overall_score = overall_score_match.group(1)
-                english_desc = f"IELTS {overall_score}"
+                # english_desc = f"IELTS {overall_score}"
                 
-                # 處理附加條件
-                if condition_match:
-                    condition = condition_match.group(1).lower()
+                # # 處理附加條件
+                # if condition_match:
+                #     condition = condition_match.group(1).lower()
                     
-                    if 'no component lower than' in condition or '不低於' in condition:
-                        # 擷取最低分數要求
-                        min_score_match = re.search(r'no component lower than (\d+(?:\.\d+)?)', condition)
-                        if min_score_match:
-                            min_score = min_score_match.group(1)
-                            english_desc += f" (單科不低於 {min_score})"
+                #     if 'no component lower than' in condition or '不低於' in condition:
+                #         # 擷取最低分數要求
+                #         min_score_match = re.search(r'no component lower than (\d+(?:\.\d+)?)', condition)
+                #         if min_score_match:
+                #             min_score = min_score_match.group(1)
+                #             english_desc += f" (單科不低於 {min_score})"
                     
-                    # 特殊情況：三項分數要求
-                    if 'with' in condition and 'three components' in condition:
-                        three_components_score_match = re.search(r'(\d+(?:\.\d+)?) in three components', condition)
-                        one_component_score_match = re.search(r'and (\d+(?:\.\d+)?) in one component', condition)
+                #     # 特殊情況：三項分數要求
+                #     if 'with' in condition and 'three components' in condition:
+                #         three_components_score_match = re.search(r'(\d+(?:\.\d+)?) in three components', condition)
+                #         one_component_score_match = re.search(r'and (\d+(?:\.\d+)?) in one component', condition)
                         
-                        if three_components_score_match and one_component_score_match:
-                            three_score = three_components_score_match.group(1)
-                            one_score = one_component_score_match.group(1)
+                #         if three_components_score_match and one_component_score_match:
+                #             three_score = three_components_score_match.group(1)
+                #             one_score = one_component_score_match.group(1)
                             
-                            english_desc = f"IELTS {overall_score} (三項不低於 {three_score}，一項不得低於 {one_score})"
+                #             english_desc = f"IELTS {overall_score} (三項不低於 {three_score}，一項不得低於 {one_score})"
                 
                 band_name = band_name.strip()
                 self.english_levels[band_name] = {
                     "eng_req": overall_score,
-                    "eng_req_info": english_desc
+                    "eng_req_info":(f"IELTS {score_and_details}")
+
                 }
                 # self.english_levels[band_name] = english_desc
                 yield response.follow(self.courese_urls, self.cards_parse)
@@ -93,11 +94,11 @@ class JcuSpiderSpider(scrapy.Spider):
         location = ', '.join(campuses)
         duration_info = response.css(".course-fast-facts__tile.fast-facts-duration p::text").get()
         if duration_info:
-            match = re.search(r'\d+(\.\d+)?', duration_info)  # 使用正則表達式查找數字
+            match = re.search(r'\d+(\.\d+)?', duration_info)
             if match:
-                duration = float(match.group())  # 提取匹配內容並轉換為 float
+                duration = float(match.group())
             else:
-                duration = None  # 如果沒有匹配到數字
+                duration = None 
         else:
             duration_info = None
             duration = None 

@@ -12,7 +12,7 @@ class LatrobeSpiderSpider(scrapy.Spider):
     all_course_url = []
     except_count = 0
     eng_req= 6
-    eng_req_info = "IELTS 6.0 (單項不低於 6.0)"
+    eng_req_info = "IELTS Overall 6.0, no band less than 6.0"
     custom_settings = {
         'CONCURRENT_REQUESTS': 1
     }

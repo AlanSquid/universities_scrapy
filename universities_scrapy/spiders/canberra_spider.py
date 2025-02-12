@@ -132,7 +132,8 @@ class CanberraSpiderSpider(scrapy.Spider):
             if match_overall:
                 overall_score = match_overall.group(1)
                 band_score = match_overall.group(3)
-                english_requirement = f"IELTS {overall_score} (單項不低於 {band_score})"
+                # english_requirement = f"IELTS {overall_score} (單項不低於 {band_score})"
+                english_requirement = f"IELTS {overall_score} overall, with no band score below {band_score}."
                 eng_req = overall_score
 
             additional_pattern = r'(?i)IELTS\s*score\s*of\s*(\d+(\.\d+)?)\s*with\s*no\s*band\s*score\s*less\s*than\s*(\d+(\.\d+)?)'
@@ -140,7 +141,8 @@ class CanberraSpiderSpider(scrapy.Spider):
             if match_additional:
                 score = match_additional.group(1)
                 band_score = match_additional.group(3)
-                english_requirement = f"IELTS {score} (單項不低於 {band_score})"
+                # english_requirement = f"IELTS {score} (單項不低於 {band_score})"
+                english_requirement = f"IELTS {score} overall, with no band score below {band_score}."
                 eng_req = score
             
             ielts_pattern = r'overall?\s*IELTS\s*Academic\s*score\s*(?:\(or\s*equivalent\))?\s*of\s*(\d+(\.\d+)?)\s*(?:,?\s*with\s*no\s*band\s*score\s*(?:less\s*than|below)\s*(\d+(\.\d+)?))?'
@@ -157,12 +159,15 @@ class CanberraSpiderSpider(scrapy.Spider):
                 if match_speaking_listening:
                     specific_skills_score = match_speaking_listening.group(1)
                     band_score = match_speaking_listening.group(4)
-                    skill_translation = "口說和聽力"
-                    english_requirement = f"IELTS {score} ({skill_translation}成績均不低於 {specific_skills_score}，單項不低於 {band_score})"
+                    # skill_translation = "口說和聽力"
+                    # english_requirement = f"IELTS {score} ({skill_translation}成績均不低於 {specific_skills_score}，單項不低於 {band_score})"
+                    skill_translation = "speaking and listening"
+                    english_requirement = f"IELTS {score} (a score of not less than {specific_skills_score} in both {skill_translation}, and no band score below {band_score})"
                 else:
                     # 如果有 band score 限制，則加入條件
                     if band_score:
-                        english_requirement = f"IELTS {score} (單項不低於 {band_score.strip()})"
+                        # english_requirement = f"IELTS {score} (單項不低於 {band_score.strip()})"                        
+                        english_requirement = f"IELTS {score} overall, with no band score below {band_score.strip()}."
                     else:
                         english_requirement = f"IELTS {score} ({additional_conditions})"
             else:
@@ -180,15 +185,19 @@ class CanberraSpiderSpider(scrapy.Spider):
                     band_score = match.group(6) 
                     if specific_skills_score and skill_types:
                         skill_translations = {
-                            "reading and writing": "閱讀和寫作",
-                            "speaking and listening": "口說和聽力"
+                            # "reading and writing": "閱讀和寫作",
+                            # "speaking and listening": "口說和聽力"
+                            "reading and writing": "reading and writing",
+                            "speaking and listening": "speaking and listening"
                         }
                         skill_translation = skill_translations.get(skill_types, skill_types)
                         english_requirement = (
-                            f"IELTS {overall_score} ({skill_translation}成績均不低於 {specific_skills_score}，單項不低於 {band_score})"
+                            # f"IELTS {overall_score} ({skill_translation}成績均不低於 {specific_skills_score}，單項不低於 {band_score})"
+                            f"IELTS {overall_score} (a score of not less than {specific_skills_score} in both {skill_translation}, with no band score below {band_score})"
                         )
                     else:
-                        english_requirement = f"IELTS {overall_score} (單項不低於 {band_score})"
+                        # english_requirement = f"IELTS {overall_score} (單項不低於 {band_score})"
+                        english_requirement = f"IELTS {overall_score} (with no band score below {band_score})"
                 else:
                     non_standard_pattern_1 = (
                         r'overall IELTS Academic score \(or equivalent\) of (\d+(\.\d+)?).*?'
@@ -204,12 +213,14 @@ class CanberraSpiderSpider(scrapy.Spider):
                         overall_score = match_1.group(1)
                         eng_req = overall_score
                         band_score = match_1.group(3) 
-                        english_requirement = f"IELTS {overall_score} (單項不低於 {band_score})"   
+                        # english_requirement = f"IELTS {overall_score} (單項不低於 {band_score})"   
+                        english_requirement = f"IELTS {overall_score} (with no band score below {band_score})"   
                     if match_2:
                         overall_score = match_2.group(1) 
                         eng_req = overall_score
                         band_score = match_2.group(3) 
-                        english_requirement = f"IELTS {overall_score} (單項不低於 {band_score})"          
+                        # english_requirement = f"IELTS {overall_score} (單項不低於 {band_score})"                                  
+                        english_requirement = f"IELTS {overall_score} (with no band score below {band_score})"          
         else:
             english_requirement = None
             eng_req = None
