@@ -156,7 +156,7 @@ class EcuSpiderSpider(scrapy.Spider):
                     if re.search(r"\d+(\.\d+)?", duration)
                     else None
                 )
-                university["duration_info"] = duration
+                university["duration_info"] = duration + ' year' if duration == '1' else duration + ' years'
             university["course_url"] = response.url
 
             yield university
