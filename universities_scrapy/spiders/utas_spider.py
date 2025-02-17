@@ -149,5 +149,5 @@ class UtasSpiderSpider(scrapy.Spider):
         yield university
 
     def closed(self, reason):    
-        print(f'{self.name}塔斯馬尼亞大學\n西澳大學，共{len(self.all_course_url) - self.except_count} 筆資料(已扣除不開放申請)')
+        print(f'{self.name}\n塔斯馬尼亞大學，共{len(self.all_course_url) - self.except_count} 筆資料(已扣除不開放申請)')
         print(f'有 {self.except_count} 筆目前不開放申請\n')
