@@ -156,6 +156,7 @@ class CquSpiderSpider(scrapy.Spider):
             if match:
                 result = match.group(0).strip()
                 return result
+            
     def closed(self, reason):
         print(f"{self.name} 爬蟲完成!")
         print(f"中央昆士蘭大學, 共有 {len(self.courses) - self.exclude_count} 筆資料(已排除)")
