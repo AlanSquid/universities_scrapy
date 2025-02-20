@@ -1,6 +1,5 @@
 import scrapy
 from universities_scrapy.items import UniversityScrapyItem 
-import scrapy
 import re
 
 class ScuSpiderSpider(scrapy.Spider):

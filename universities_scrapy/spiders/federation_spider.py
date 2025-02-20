@@ -1,6 +1,5 @@
 import scrapy
 from universities_scrapy.items import UniversityScrapyItem 
-import re
 from scrapy_selenium import SeleniumRequest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,7 +14,6 @@ class FederationSpider(scrapy.Spider):
     # API
     start_urls = ["https://www.federation.edu.au/api/CourseApi/course-search?PageId=12&PageSize=20&PageNumber=1&Sort=undefined&Type=search&LevelOfStudy=Undergraduate&LevelOfStudy=Postgraduate&IsDomestic=false"]
     all_course_url = []
-    except_count = 0
     page = 0
 
     def parse(self, response):
@@ -124,5 +122,4 @@ class FederationSpider(scrapy.Spider):
         yield university
 
     def closed(self, reason):    
-        print(f'{self.name}爬蟲完畢\n澳大利亞聯邦大學，共 {len(self.all_course_url) - self.except_count} 筆資料(已扣除不開放申請)')
-        print(f'有 {self.except_count} 筆目前不開放申請\n')
+        print(f'{self.name}爬蟲完畢\n澳大利亞聯邦大學，共 {len(self.all_course_url) } 筆資料')
