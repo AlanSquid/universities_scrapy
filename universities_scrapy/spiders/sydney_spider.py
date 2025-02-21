@@ -281,7 +281,7 @@ class SydneySpiderSpider(scrapy.Spider):
     def extract_course_urls(self, response):
         cards = response.css("section.m-content.m-course-card")
         keywords = ["Bachelor", "Master"]
-        except_keywords = ["(Honours)", "(Extended)", "(Advanced Studies)"]
+        exclude_keywords = ["(Honours)", "(Extended)", "(Advanced Studies)"]
 
         for card in cards:
             course_name = card.css("h3.m-title.m-course-card__link-title::text").get()
@@ -292,7 +292,7 @@ class SydneySpiderSpider(scrapy.Spider):
                 and sum(course_name.count(keyword) for keyword in keywords) == 1
                 and all(
                     except_keyword not in course_name
-                    for except_keyword in except_keywords
+                    for except_keyword in exclude_keywords
                 )
             ):
                 # 這個課程連結是否已經在列表中

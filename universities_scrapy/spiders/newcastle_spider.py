@@ -27,14 +27,14 @@ class NewcastleSpiderSpider(scrapy.Spider):
     def parse(self, response):
         rows = response.css('.uon-filtron-row.uon-card:not([style*="display: none;"])')
         keywords = ["Bachelor of", "Master of"]
-        except_keywords = ["(pre", "(Honours", "(Advanced"]
+        exclude_keywords = ["(pre", "(Honours", "(Advanced"]
 
         for row in rows:
             course_name = row.css(".degree-title a.degree-link::text").get()
             course_url = row.css(".degree-title a.degree-link::attr(href)").get()
             course = {"name": course_name, "url": course_url}
             if any(course_name.count(keyword) == 1 for keyword in keywords) and all(
-                except_keyword not in course_name for except_keyword in except_keywords
+                except_keyword not in course_name for except_keyword in exclude_keywords
             ):
                 self.courses.append(course)
 
