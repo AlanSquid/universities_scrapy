@@ -5,10 +5,22 @@ import re
 class UwaSpider(scrapy.Spider):
     name = "uwa_spider"
     allowed_domains = ["www.uwa.edu.au", "www.search.uwa.edu.au"]
-    start_urls = ["https://www.search.uwa.edu.au/s/search.html?f.Tabs%7Ccourses=Courses&query=&f.International%7Cinternational=Available+to+International+Students&collection=uwa%7Esp-search"]
-
+    course_search_urls = "https://www.search.uwa.edu.au/s/search.html?f.Tabs%7Ccourses=Courses&query=&f.International%7Cinternational=Available+to+International+Students&collection=uwa%7Esp-search"
+    start_urls = ["https://www.fees.uwa.edu.au/Browse/BrowseCourses?feeType=INTPG&feeYear=2025"]
     full_data=[]
+    course_fee_dict = {}
+
     def parse(self, response):
+        rows = response.css("table[summary='list of courses starting with M'] tbody tr")
+        for row in rows:
+            course_code_raw = row.css('td:nth-child(2)::text').get(default='').strip()
+            course_code = course_code_raw.split('/')[0].strip()
+            fee_text = row.css('td:nth-child(5)::text').get(default='').strip().replace('$', '').replace(',', '')
+            if course_code and fee_text.isdigit():
+                self.course_fee_dict[course_code] = int(fee_text)
+        yield response.follow(self.course_search_urls, self.course_parse)
+ 
+    def course_parse(self, response):
         cards = response.css("div.listing-item__content")
         for card in cards: 
             url = card.css("a::attr(data-live-url)").get()
@@ -20,7 +32,8 @@ class UwaSpider(scrapy.Spider):
             if not course_name or any(keyword in course_name for keyword in skip_keywords) or sum(course_name.count(keyword) for keyword in keywords) >= 2:
                 # print('跳過:',course_name)
                 continue
-
+            if "Bachelor of" in course_name:
+                print(course_name,"===",url)
             # 刪除 master of 和 bachelor of
             # name = re.sub(r'\b(master of|bachelor of)\b', '', course_name, flags=re.IGNORECASE).strip()
          
@@ -34,7 +47,7 @@ class UwaSpider(scrapy.Spider):
         # 檢查下一頁
         next_page = response.css('a.pagination__link[aria-label="Next page"]::attr(href)').get()
         if next_page is not None:
-            yield response.follow(next_page, self.parse)       
+            yield response.follow(next_page, self.course_parse)       
         else:
             # print(f'共有 {len(self.full_data)} 筆資料')
             for data in self.full_data:
@@ -99,15 +112,15 @@ class UwaSpider(scrapy.Spider):
     
     def page_parse(self, response):
         #取得課程名稱
-        # course_name = response.css('h1.course-header-module-title::text').get()
+        course_name = response.css('h1.course-header-module-title::text').get()
 
         # 取得學費
         international_fees = response.css('div.segment-info[data-segment-filter="international"]')
         degree_level = response.css('div.course-header-module-titles h2::text').get()
         if "Undergraduate" in degree_level :
-            degree_level_id=1
+            degree_level_id = 1
         elif "Postgraduate" in degree_level:
-            degree_level_id=2
+            degree_level_id = 2
 
         # 檢查是否有 "2025" 的學費資訊
         fee_2025 = international_fees.xpath(
@@ -120,6 +133,24 @@ class UwaSpider(scrapy.Spider):
                 fee_2025 = int(fee_2025)  # 沒有小數部分，轉換為整數
             else:
                 fee_2025 = round(fee_2025, 2)  # 有小數部分，保留兩位小數
+        else:
+            course_cards = response.css('div.course-detail.card')
+            for card in course_cards:
+                quick_details = card.xpath('.//h3[contains(text(), "Quick details")]')
+                # 找到 h3 的下一個 div，這是 card-details 的容器
+                details_div = quick_details.xpath('./following-sibling::div[contains(@class, "card-container")]')
+                # 在這個容器下尋找 card-details-dynamic 和 card-details-static
+                details_sections = details_div.xpath('.//div[contains(@class, "card-details")]')
+                course_code = None
+                for section in details_sections:
+                    # 找到 "Course Code" 的標籤
+                    course_code_label = section.xpath('.//div[contains(text(), "Course Code")]')
+                    if course_code_label:
+                        # 定位到下一個 div (Course Code 的值)
+                        course_code_value = course_code_label.xpath('./following-sibling::div[1]//li/text()').get()
+                        if course_code_value:
+                            course_code = course_code_value.strip()
+                            fee_2025 = self.course_fee_dict.get(course_code)
 
         # 提取 "English competency" 部分的所有段落
         admission_requirement = response.css('div')
