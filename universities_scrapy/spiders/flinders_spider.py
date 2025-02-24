@@ -64,13 +64,13 @@ class FlindersSpiderSpider(scrapy.Spider):
         # 抓課程名稱
         course_name = response.css("h1.yellow_heading::text").get()
         keywords = ["Bachelor"]
-        except_keywords = ["(Honours)", "Master of"]
+        exclude_keywords = ["(Honours)", "Master of"]
 
         if not (
             any(course_name.count(keyword) == 1 for keyword in keywords)
             and sum(course_name.count(keyword) for keyword in keywords) == 1
             and all(
-                except_keyword not in course_name for except_keyword in except_keywords
+                except_keyword not in course_name for except_keyword in exclude_keywords
             )
         ):
             return
