@@ -13,28 +13,23 @@ class UtsSpider(scrapy.Spider):
     skipped_courses_count = 0
     ielts_data = {}
 
-
     def parse(self, response):        
         sections = response.xpath('//section[@class="collapsible"]')
-        
         for section in sections:
             section_title = section.xpath('.//h3/text()').get()
             is_undergraduate = 'Undergraduate' in section_title if section_title else False
-            
             content_sections = section.xpath('.//div[@class="collapsible__content"]//p[strong]')
             
             for content in content_sections:
                 # 獲取課程名稱
                 courses = content.xpath('.//strong/text()').getall()
-                
                 # 獲取IELTS要求
                 requirements_list = content.xpath('./following-sibling::ul[1]')
                 if requirements_list:
                     ielts_req = requirements_list.xpath('.//li[contains(text(), "IELTS")]/text()').get()
                     
                     if ielts_req:
-                        ielts_req = ielts_req.replace('\xa0\xa0', ' ').replace('\xa0', ' ')
-
+                        ielts_req = ielts_req.replace('\xa0\xa0', ' ').replace('\xa0', ' ').replace('; or','')
                         # 提取IELTS分數
                         score_match = re.search(r'IELTS.*?(\d+\.?\d*)\s+overall', ielts_req)
                         if score_match:
@@ -87,7 +82,13 @@ class UtsSpider(scrapy.Spider):
 
     def page_parse(self, response):
         course_name = response.css('.page-title h1::text').get().strip()    
-
+        # 跳過雙學位, Honours, Online, Graduate Certificate, Diploma
+        skip_keywords = ["Doctor of", "Honours", "Graduate Certificate", "Diploma", "Juris Doctor", "Extension"]
+        keywords = ["Bachelor of", "Master of"]
+        if not course_name or any(keyword in course_name for keyword in skip_keywords) or sum(course_name.count(keyword) for keyword in keywords) >= 2:
+            # print('跳過:',course_name)
+            self.skipped_courses_count += 1
+            return
         locations = response.css('.block.block-dddd.block-dddd-view-modeluts-course-course__location p::text').get()
         if locations :
             locations.strip()
@@ -102,7 +103,6 @@ class UtsSpider(scrapy.Spider):
             duration = match.group(1)
         else:
             duration = None
-
 
         uts_code_value = response.css('div.sidebar__info.sidebar--info-codes dt:contains("UTS") + dd span::text').get()
         
@@ -165,7 +165,6 @@ class UtsSpider(scrapy.Spider):
         yield university
 
     def get_ielts_requirement(self, course_name, degree_level_id):
-  
         for program, requirement in self.ielts_data.items():
             if course_name.lower() in program.lower():
                 return {
@@ -184,9 +183,7 @@ class UtsSpider(scrapy.Spider):
             } 
 
 
-
-
     def closed(self, reason):    
         valid_courses_count = len(self.all_course_url) - self.skipped_courses_count
-        print(f'{self.name}爬蟲完成!\n雪梨科技大學, 共有 {valid_courses_count} 筆資料(已扣除不開放申請)\n有 {self.skipped_courses_count} 筆目前不開放申請\n')
+        print(f'{self.name}爬蟲完成!\n雪梨科技大學, 共有 {valid_courses_count} 筆資料(已扣除不開放申請)\n')
 
