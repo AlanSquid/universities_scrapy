@@ -30,8 +30,9 @@ class MonashSpiderSpider(scrapy.Spider):
         all_course_cards = response.css('div.box-featured')
         for card in all_course_cards:
             # 首先確認此科系有給國際生
-            course_url = card.css('a.box-featured__heading-link::attr(href)').get()
-            course_url_international = course_url + "?international=true"
+            course_url_international = card.css('a.box-featured__heading-link::attr(title)').get()
+            # course_url = card.css('a.box-featured__heading-link::attr(href)').get()
+            # course_url_international = course_url + "?international=true"
             # if not any(keyword in course_url for keyword in ["professional-psychology", "genome-analytics", "educational-and-developmental-psychology"]):
             #     continue
             # 取得科系名稱
