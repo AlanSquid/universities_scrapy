@@ -92,10 +92,10 @@ class UnisaSpiderSpider(scrapy.Spider):
                     if match[4]: listening = match[4] 
 
             parts = [f"IELTS {total}"] if total else []  
-            if reading: parts.append(f"閱讀 {reading}")
-            if writing: parts.append(f"寫作 {writing}")
-            if speaking: parts.append(f"口說 {speaking}")
-            if listening: parts.append(f"聽力 {listening}")
+            if reading: parts.append(f"reading {reading}")
+            if writing: parts.append(f"writing {writing}")
+            if speaking: parts.append(f"speaking {speaking}")
+            if listening: parts.append(f"listening {listening}")
             english_requirement = f"{parts[0]} ({'，'.join(parts[1:])})" if len(parts) > 1 else parts[0] if parts else ""
             english_requirement = english_requirement if english_requirement else None
             eng_req = total

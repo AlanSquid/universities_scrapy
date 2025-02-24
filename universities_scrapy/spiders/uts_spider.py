@@ -5,15 +5,64 @@ import re
 class UtsSpider(scrapy.Spider):
     name = "uts_spider"
     allowed_domains = ["www.uts.edu.au"]    
-    start_urls = ["https://www.uts.edu.au/study/find-a-course/search?search="]
-    english_requirement_url = 'https://www.uts.edu.au/study/international/essential-information/english-language-requirements'
+    course_urls = "https://www.uts.edu.au/study/find-a-course/search?search="
+    start_urls = ['https://www.uts.edu.au/study/international/essential-information/english-language-requirements']
     academic_requirement_url = 'https://www.uts.edu.au/study/international/essential-information/academic-requirements'
     fee_detail_url = 'https://cis.uts.edu.au/fees/course-fees.cfm'
     all_course_url = []
     skipped_courses_count = 0
+    ielts_data = {}
 
-    def parse(self, response):
-        pass
+
+    def parse(self, response):        
+        sections = response.xpath('//section[@class="collapsible"]')
+        
+        for section in sections:
+            section_title = section.xpath('.//h3/text()').get()
+            is_undergraduate = 'Undergraduate' in section_title if section_title else False
+            
+            content_sections = section.xpath('.//div[@class="collapsible__content"]//p[strong]')
+            
+            for content in content_sections:
+                # 獲取課程名稱
+                courses = content.xpath('.//strong/text()').getall()
+                
+                # 獲取IELTS要求
+                requirements_list = content.xpath('./following-sibling::ul[1]')
+                if requirements_list:
+                    ielts_req = requirements_list.xpath('.//li[contains(text(), "IELTS")]/text()').get()
+                    
+                    if ielts_req:
+                        ielts_req = ielts_req.replace('\xa0\xa0', ' ').replace('\xa0', ' ')
+
+                        # 提取IELTS分數
+                        score_match = re.search(r'IELTS.*?(\d+\.?\d*)\s+overall', ielts_req)
+                        if score_match:
+                            ielts_score = float(score_match.group(1))
+                            
+                            # 處理每個課程
+                            for course in courses:
+                                course = course.strip()
+                                
+                                # 處理 "All other courses"
+                                if "All other courses" in course:
+                                    key = "Undergraduate coursework All other courses" if is_undergraduate else "Postgraduate coursework All other courses"
+                                    self.ielts_data[key] = {
+                                        "eng_req_info": ielts_req.strip(),
+                                        "eng_req": ielts_score
+                                    }
+                                else:
+                                    cleaned_course = re.sub(r'\s*\([C]\d{5}\)\s*', '', course.strip())
+                                    if cleaned_course:
+                                        cleaned_course = cleaned_course.replace('\xa0\xa0', ' ').replace('\xa0', ' ')
+                                        self.ielts_data[cleaned_course] = {
+                                            "eng_req_info": ielts_req.strip(),
+                                            "eng_req": ielts_score
+                                        }
+
+        yield response.follow(self.course_urls, self.course_parse)
+
+    def course_parse(self, response):
         target_labels = {
             "panel-undergraduate": "Bachelor's Degree",
             "panel-postgraduate": "Master's Coursework"
@@ -89,13 +138,13 @@ class UtsSpider(scrapy.Spider):
                 tuition_fee = fees[-1].replace('$', '').strip()
         
         
-        english = self.english_requirement(response.meta['course_name'])
         
         # degree_level_id
         if response.meta['degree_level'] == 'IFUG' :
             degree_level_id = 1
         else:
             degree_level_id = 2
+        english = self.get_ielts_requirement(response.meta['course_name'],degree_level_id)
 
         university = UniversityScrapyItem()
         university['university_id'] = 11
@@ -110,35 +159,32 @@ class UtsSpider(scrapy.Spider):
         university['degree_level_id'] = degree_level_id
         university['course_url'] = response.meta['course_url']
         university['acad_req_url'] = self.academic_requirement_url
-        university['eng_req_url'] = self.english_requirement_url
+        university['eng_req_url'] = self.start_urls[0]
         university['fee_detail_url'] = self.fee_detail_url
 
         yield university
 
-    def english_requirement(self, course_name):
-        exception_courses_1 = [
-            "Bachelor of Science Master of Teaching in Secondary Education", 
-            "Bachelor of Communication (Writing and Publishing) Master of Teaching in Secondary Education",
-            "Bachelor of Technology Master of Teaching in Secondary Education",
-            "Bachelor of Business Master of Teaching in Secondary Education",
-            "Bachelor of Economics Master of Teaching in Secondary Education",
-            "Bachelor of Education Futures Master of Teaching in Primary Education",
-        ]
-        exception_courses_2 = [
-            "Bachelor of Nursing", 
-            "Bachelor of Nursing Bachelor of Creative Intelligence and Innovation",
-            "Bachelor of Nursing Bachelor of International Studies"
-        ]
-        if any(course == course_name for course in exception_courses_1):
-            return  {"eng_req":7.5,"eng_req_info":"IELTS 7.5 (口說8.0，聽力8.0，閱讀7.0，寫作7.0)"}
+    def get_ielts_requirement(self, course_name, degree_level_id):
+  
+        for program, requirement in self.ielts_data.items():
+            if course_name.lower() in program.lower():
+                return {
+                    "eng_req": requirement.get("eng_req", None),
+                    "eng_req_info": requirement.get("eng_req_info", None)
+                }
+        if degree_level_id == 1:
+            return {
+                "eng_req": self.ielts_data["Undergraduate coursework All other courses"].get("eng_req", None),
+                "eng_req_info": self.ielts_data["Undergraduate coursework All other courses"].get("eng_req_info", None)
+            }    
+        else:
+            return {
+                "eng_req": self.ielts_data["Postgraduate coursework All other courses"].get("eng_req", None),
+                "eng_req_info": self.ielts_data["Postgraduate coursework All other courses"].get("eng_req_info", None)
+            } 
 
-        elif any(course == course_name for course in exception_courses_2):
-            return  {"eng_req":7,"eng_req_info":"IELTS 7.0 (寫作7.0)"}
 
-        elif "Bachelor of Communication (Honours)" == course_name:
-            return  {"eng_req":7,"eng_req_info":"IELTS 7.0 (寫作7.0)"}
 
-        return  {"eng_req":6.5,"eng_req_info":"IELTS 6.5 (寫作6.0)"}
 
     def closed(self, reason):    
         valid_courses_count = len(self.all_course_url) - self.skipped_courses_count
