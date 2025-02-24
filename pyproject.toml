@@ -12,6 +12,7 @@ dependencies = [
     "cloudscraper>=1.2.71",
     "scrapy-playwright>=0.0.42",
     "pdfplumber>=0.11.5",
+    "webdriver-manager>=4.0.2",
 ]
 
 [dependency-groups]
