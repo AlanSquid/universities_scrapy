@@ -12,6 +12,7 @@ class WesternsydneySpiderSpider(scrapy.Spider):
     all_course_url=[]
     english_requirement_url = 'https://www.westernsydney.edu.au/international/studying/entry-requirements'
     ielts_data = {}
+    except_count = 0
     # 確保 'others' 被初始化為字典
     def parse(self, response):
         ielts_data = {}
@@ -172,7 +173,9 @@ class WesternsydneySpiderSpider(scrapy.Spider):
         # 移除包含 'UAC' 的內容
         campuses = [re.sub(r'\s*UAC.*', '', campus).strip() for campus in campuses]
         location = ', '.join(campus for campus in campuses if campus)
-
+        if location.lower() == "online":
+            self.except_count += 1
+            return
         university = UniversityScrapyItem()
         university['university_id'] = 12
         university['name'] = course_name  
@@ -217,5 +220,5 @@ class WesternsydneySpiderSpider(scrapy.Spider):
     #     return {"eng_req":6.5,"eng_req_info":  "IELTS 6.5 overall score, Minimum 6.0 in each subtest"  }
 
     def closed(self, reason):    
-        print(f'{self.name}爬蟲完成!\n西雪梨大學, 共有 {len(self.all_course_url)} 筆資料\n')
+        print(f'{self.name}爬蟲完成!\n西雪梨大學, 共有 {len(self.all_course_url) - self.except_count} 筆資料\n')
       

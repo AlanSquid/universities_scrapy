@@ -57,7 +57,9 @@ class CduSpider(scrapy.Spider):
  
         # Duration
         location = response.css("div.block-course-key-fact-location div[data-student-type='international']::text").get()
-        
+        if location and location.lower() == "online":
+            self.except_count += 1
+            return  
         requirements  = response.css('div#entry-requirements details div.accordion__content.rich-text.rich-text--contained div[data-student-type="international"].spaced-top table')
         ielts_info = requirements.xpath(".//td[contains(text(), 'IELTS')]/parent::tr/td/text()").getall()
         eng_req_info = " ".join(ielts_info)

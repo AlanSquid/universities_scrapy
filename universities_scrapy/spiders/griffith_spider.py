@@ -13,6 +13,7 @@ class GriffithSpider(scrapy.Spider):
     allowed_domains = ["www.griffith.edu.au"]
     start_urls = ["https://www.griffith.edu.au/"]
     all_course_url=[]
+    except_count = 0
 
 
     def start_requests(self):
@@ -67,7 +68,10 @@ class GriffithSpider(scrapy.Spider):
                     
                 location_list = course_page.css("dt.info-group-title.campus + div dd::text").getall()
                 location_format = ', '.join([location.strip() for location in location_list]) if location_list else None
-
+                if location_format.lower() == "online":
+                    self.except_count += 1
+                    return                
+        
                 #取得ielts要求
                 eng_req_info = course_page.css("dl.info-group.entry-requirement-group dd .badge *::text").getall()
                 if eng_req_info:
@@ -128,9 +132,8 @@ class GriffithSpider(scrapy.Spider):
                 university['course_url'] = full_link
 
                 yield university
-                
-        print(f'{self.name}爬蟲完成!')
-        print(f'格里菲斯大學, 共有 {len(self.all_course_url)} 筆資料\n')
+    def close(self):
+        print(f'{self.name}爬蟲完畢！\n格里菲斯大學， 共有 {len(self.all_course_url) - self.except_count}筆資料\n')                
 
 
     def scroll_to_bottom(self, driver):

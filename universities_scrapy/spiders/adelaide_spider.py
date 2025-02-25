@@ -8,7 +8,7 @@ class AdelaideSpider(scrapy.Spider):
     base_url = "https://www.adelaide.edu.au"
     start_urls = ["https://www.adelaide.edu.au/degree-finder/?v__s=&m=view&dsn=program.source_program&adv_avail_comm=1&adv_acad_career=0&adv_degree_type=1&adv_atar=0&year=2025&adv_subject=0&adv_career=0&adv_campus=0&adv_mid_year_entry=0","https://www.adelaide.edu.au/degree-finder/?v__s=&m=view&dsn=program.source_program&adv_avail_comm=1&adv_acad_career=0&adv_degree_type=10&adv_atar=0&year=2025&adv_subject=0&adv_career=0&adv_campus=0&adv_mid_year_entry=0"]
     full_link_list=[]
-
+    except_count = 0
     def parse(self, response):
         links = response.css(
             "div.c-degree-finder__filter-results  ul.c-degree-finder__filter-results__list li a::attr(href)"
@@ -59,7 +59,9 @@ class AdelaideSpider(scrapy.Spider):
 
         locations = [loc.strip() for loc in locations if loc.strip()]
         locations = ', '.join(locations) if locations else None
-
+        if locations.lower() == "online":
+            self.except_count += 1
+            return        
         # 取得學費
         fee_element = response.css('div.international_applicant td::text').getall()
         tuition_fee = None
@@ -100,4 +102,4 @@ class AdelaideSpider(scrapy.Spider):
 
         yield university
     def closed(self, reason):    
-        print(f'{self.name}爬蟲完畢\n阿德雷得大學，共{len(self.full_link_list)}筆資料\n')
+        print(f'{self.name}爬蟲完畢\n阿德雷得大學，共{len(self.full_link_list) - self.except_count}筆資料\n')

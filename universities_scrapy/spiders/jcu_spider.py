@@ -12,7 +12,7 @@ class JcuSpiderSpider(scrapy.Spider):
     acad_req_url = "https://www.jcu.edu.au/applying-to-jcu/international-applications/academic-and-english-language-entry-requirements/country-specific-academic-levels"
     all_course_url=[]
     english_levels = {}
-
+    except_count = 0
     def parse(self, response):
         # 處理英文門檻
         ielts_row = response.xpath('//tr[td/p/strong[contains(text(), "IELTS")]]')
@@ -92,6 +92,9 @@ class JcuSpiderSpider(scrapy.Spider):
         campuses = response.css('.course-fast-facts__location-list-item a.course-fast-facts__location-link::text').getall()
         campuses = [campus.strip() for campus in campuses if campus.strip()]
         location = ', '.join(campuses)
+        if location.lower() == "online":
+            self.except_count += 1
+            return
         duration_info = response.css(".course-fast-facts__tile.fast-facts-duration p::text").get()
         if duration_info:
             match = re.search(r'\d+(\.\d+)?', duration_info)
@@ -105,10 +108,11 @@ class JcuSpiderSpider(scrapy.Spider):
         tuition_fee = response.css(".course-fast-facts__tile.fast-facts-fees p::text").get()
         match = re.search(r'\d+(?:,\d+)*(\.\d+)?', tuition_fee)
         if match:
-            fee = match.group(0)  
-            fee = fee.replace(',', '')  
+            fee =match.group(0)
+            fee = float(fee.replace(',', ''))
         else:
             fee = None
+
         english_level = response.css('.course-fast-facts__tile__body-top p::text').re_first(r'Band\s\w+')
         english = self.english_requirement(english_level)
 
@@ -136,5 +140,5 @@ class JcuSpiderSpider(scrapy.Spider):
     
     
     def closed(self, reason):    
-        print(f'{self.name}爬蟲完成!\n詹姆士庫克大學, 共有 {len(self.all_course_url)} 筆資料\n')
+        print(f'{self.name}爬蟲完成!\n詹姆士庫克大學, 共有 {len(self.all_course_url) - self.except_count} 筆資料\n')
       

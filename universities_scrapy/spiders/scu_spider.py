@@ -66,6 +66,9 @@ class ScuSpiderSpider(scrapy.Spider):
 
         campus = int_course_info.xpath("//li[@class='course-snapshot__item'][.//h4[contains(text(), 'Location')]]//div[@class='course-snapshot__text']/p/text()").get()
         campus = campus.strip()  if campus else None
+        if campus.lower() == "online":
+            self.except_count += 1
+            return
 
         course_section = response.xpath("//span[@id='course-requirements']/following-sibling::section[@class='course-content panel-m']")
         scores = course_section.xpath(".//h4[text()='Language requirements']/following-sibling::table[@class='table']/tbody//tr")
