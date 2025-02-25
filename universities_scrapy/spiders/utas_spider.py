@@ -68,7 +68,9 @@ class UtasSpiderSpider(scrapy.Spider):
         locations = response.xpath('//h3[contains(text(), "Location")]/..//dl/dt[@class="meta-list--title"]/text()').getall()
         locations_set = {loc.strip() for loc in locations if loc.strip()}  # 使用集合去重
         locations = ', '.join(sorted(locations_set)) if locations_set else None  # 如果集合為空則返回 None
-
+        if locations.lower() == "online":
+            self.except_count += 1
+            return
         # fee 
         fee_section2 = response.xpath('//div[@class="richtext richtext__medium"]//p[contains(text(), "Total Course Fee")]//strong/text()').get()
         fee_section = response.xpath(

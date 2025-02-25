@@ -168,8 +168,9 @@ class UscSpiderSpider(scrapy.Spider):
 
             # 將結果以逗號分隔並存成字串
             locations_str = ", ".join(filtered_locations)      
-            if locations_str == "":
-                locations_str = None
+            if locations_str.lower() == "online":
+                self.except_count += 1
+                return
             yield response.follow(course_url, self.page_parse, meta=dict(
                 course_name = course_name,
                 degree_level_id = degree_level_id,

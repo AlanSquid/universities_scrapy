@@ -10,7 +10,7 @@ class QutSpiderSpider(scrapy.Spider):
     seen_urls = set()
     start_time = time.time()
     non_international_num = 0
-    
+    except_count = 0
     # 到 https://www.qut.edu.au/study/international 頁面找到15個課程大類
     def parse(self, response):
         urls = response.css('div#study-areas ul.study-area-links li.list-links a.arrow-link::attr(href)').getall()
@@ -129,8 +129,10 @@ class QutSpiderSpider(scrapy.Spider):
         # # 校區處理
         locations = response.css('ul[data-course-map-key="quickBoxDeliveryINT"] li::text').getall()
         location = ', '.join(locations)
-        if location == "":
-            location = None
+
+        if location.lower() == "online":
+            self.except_count += 1
+            return
 
         # # 學習時間處理
         durations = response.css('li[data-course-map-key="quickBoxDurationINTFt"]::text').getall()
@@ -181,7 +183,7 @@ class QutSpiderSpider(scrapy.Spider):
                 )
 
     def close(self):
-        print(f'\n{self.name}爬蟲完畢！\n昆士蘭科技大學，共{len(self.seen_urls)}個課程開放給國際生')
+        print(f'\n{self.name}爬蟲完畢！\n昆士蘭科技大學，共{len(self.seen_urls) - self.except_count}個課程開放給國際生')
         print(f'其中有{self.non_international_num}個科系，不開放給國際生\n')
         # end_time = time.time()
         # elapsed_time = end_time - self.start_time

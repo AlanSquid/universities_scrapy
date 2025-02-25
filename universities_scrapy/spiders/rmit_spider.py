@@ -1,10 +1,5 @@
 import re
 import scrapy
-from scrapy import Selector
-from scrapy_selenium import SeleniumRequest
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from universities_scrapy.items import UniversityScrapyItem
 
 class RmitSpiderSpider(scrapy.Spider):
@@ -13,7 +8,7 @@ class RmitSpiderSpider(scrapy.Spider):
     # start_urls = ["https://www.rmit.edu.au/study-with-us/international-students/programs-for-international-students/courses-for-international-students-by-study-area?activeTab=All"]
     start_urls = ["https://www.rmit.edu.au/content/rmit/au/en/study-with-us/international-students/programs-for-international-students/courses-for-international-students-by-study-area/jcr:content/body-gridcontent/tabs/all/rmitprogramlist_copy.model.json?t=1739160669494&data=yes&facetFilter=rmit:study_type/undergraduate_degree","https://www.rmit.edu.au/content/rmit/au/en/study-with-us/international-students/programs-for-international-students/courses-for-international-students-by-study-area/jcr:content/body-gridcontent/tabs/all/rmitprogramlist_copy.model.json?t=1739161591376&data=yes&facetFilter=rmit:study_type/postgraduate_study"]
     all_course_url = []
-    
+    except_count = 0
     def parse(self, response):
         data = response.json()  
         for item in data['programs']['programs']:
@@ -65,7 +60,9 @@ class RmitSpiderSpider(scrapy.Spider):
         locations = response.xpath('//dt[text()=" Location:"]/following-sibling::dd[@class="desc qf-int-location"]/text()').getall()
         locations = [all_location.strip() for all_location in locations]
         location = ', '.join(locations)
-
+        if location.lower() == "online":
+            self.except_count += 1
+            return
         # 學制(期間)
         durations = response.xpath('//dt[text()=" Duration:"]/following-sibling::dd[@class="desc qf-int-duration"]/text()').getall()
         durations = [all_duration.strip() for all_duration in durations]
@@ -93,7 +90,8 @@ class RmitSpiderSpider(scrapy.Spider):
         yield university
    
     def close(self):
-        print(f"墨爾本皇家理工大學({self.name})總共{len(self.all_course_url)}個科系")
+        print(f'{self.name}爬蟲完成!\n墨爾本皇家理工大學, 共有 {len(self.all_course_url) - self.except_count} 筆資料')
         # end_time = time.time()
         # elapsed_time = end_time - self.start_time
         # print(f'爬蟲時間: {elapsed_time:.2f}', '秒')
+        

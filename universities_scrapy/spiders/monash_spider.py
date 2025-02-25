@@ -18,6 +18,7 @@ class MonashSpiderSpider(scrapy.Spider):
     all_course_url = []
     non_international_num = 0
     start_time = time.time()
+    except_count = 0
     custom_settings = {
         "HTTPERROR_ALLOWED_CODES": [403],
     }
@@ -147,8 +148,9 @@ class MonashSpiderSpider(scrapy.Spider):
 
         location = ', '.join([d.strip() for d in locations])
             # 防止空字串
-        if not location:
-            location = None
+        if location.lower() == "online":
+            self.except_count += 1
+            return
 
         # 學習期間
         duration_th = course_response.css('th').xpath(".//h5[text()='Duration']")
@@ -224,7 +226,7 @@ class MonashSpiderSpider(scrapy.Spider):
         return scrapy_response
     
     def close(self):
-        print(f'\n{self.name}爬蟲完畢！\n蒙納許大學，共{len(self.all_course_url)}筆資料')
+        print(f'\n{self.name}爬蟲完畢！\n蒙納許大學，共{len(self.all_course_url) - self.except_count}筆資料')
         # print(f'有{self.non_international_num}個科系，不提供給國際生\n')
         # end_time = time.time()
         # elapsed_time = end_time - self.start_time
