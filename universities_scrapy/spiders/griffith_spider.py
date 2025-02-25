@@ -14,7 +14,7 @@ class GriffithSpider(scrapy.Spider):
     start_urls = ["https://www.griffith.edu.au/"]
     all_course_url=[]
     except_count = 0
-
+    
 
     def start_requests(self):
         url = "https://www.griffith.edu.au/study/degrees?academicCareerCode=ugrd&academicCareerCode=pgrd&degreeType=single&studentType=international"
@@ -70,7 +70,7 @@ class GriffithSpider(scrapy.Spider):
                 location_format = ', '.join([location.strip() for location in location_list]) if location_list else None
                 if location_format.lower() == "online":
                     self.except_count += 1
-                    return                
+                    continue                
         
                 #取得ielts要求
                 eng_req_info = course_page.css("dl.info-group.entry-requirement-group dd .badge *::text").getall()
