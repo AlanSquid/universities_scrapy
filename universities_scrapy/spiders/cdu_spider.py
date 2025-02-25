@@ -43,6 +43,9 @@ class CduSpider(scrapy.Spider):
         duration_info = response.css("div.block-course-key-fact-duration div[data-student-type='international'] div::text").get()
         if duration_info:
             duration_info = duration_info.strip()
+            if "Not available full-time" in duration_info:
+                self.except_count += 1
+                return
             pattern = r"(\d+(\.\d+)?)\s+year/s\s+full-time"
             match = re.search(pattern, duration_info)
             if match:
@@ -54,7 +57,7 @@ class CduSpider(scrapy.Spider):
  
         # Duration
         location = response.css("div.block-course-key-fact-location div[data-student-type='international']::text").get()
-
+        
         requirements  = response.css('div#entry-requirements details div.accordion__content.rich-text.rich-text--contained div[data-student-type="international"].spaced-top table')
         ielts_info = requirements.xpath(".//td[contains(text(), 'IELTS')]/parent::tr/td/text()").getall()
         eng_req_info = " ".join(ielts_info)
@@ -73,10 +76,11 @@ class CduSpider(scrapy.Spider):
         tuition_section = response.css('div#overview details.accordion.accordion--divided div.accordion__content.rich-text.rich-text--contained div[data-student-type="international"]')
         if tuition_section.css('h4::text').get() == "International tuition fees":
             tuition_text = tuition_section.css('p::text').get()
-            match = re.search(r'AUD\s*\$([\d,]+(?:\.\d{2})?)', tuition_text)
-            if match:
-                annual_fee = match.group(1)
-                fee = float(annual_fee.replace(',', ''))
+            if tuition_text:
+                match = re.search(r'AUD\s*\$([\d,]+(?:\.\d{2})?)', tuition_text)
+                if match:
+                    annual_fee = match.group(1)
+                    fee = float(annual_fee.replace(',', ''))
 
         university = UniversityScrapyItem()
         university['university_id'] = 15
