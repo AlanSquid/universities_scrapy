@@ -120,9 +120,13 @@ class EcuSpiderSpider(scrapy.Spider):
                         and "Online" not in location_name
                     ):
                         location_list.append(location_name)
+            
 
             # 列表轉字串
             location = ", ".join(location_list)
+            if location == "":
+                return
+            
             # print(f"校區: {location}")
             duration = response.css('h3:contains("Duration") + p::text').re_first(
                 r"(\d+\s+years?\s+full-?time)"

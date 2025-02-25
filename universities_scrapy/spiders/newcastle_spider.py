@@ -33,7 +33,7 @@ class NewcastleSpiderSpider(scrapy.Spider):
             course_name = row.css(".degree-title a.degree-link::text").get()
             course_url = row.css(".degree-title a.degree-link::attr(href)").get()
             course = {"name": course_name, "url": course_url}
-            if any(course_name.count(keyword) == 1 for keyword in keywords) and all(
+            if course_name and any(course_name.count(keyword) == 1 for keyword in keywords) and all(
                 except_keyword not in course_name for except_keyword in exclude_keywords
             ):
                 self.courses.append(course)

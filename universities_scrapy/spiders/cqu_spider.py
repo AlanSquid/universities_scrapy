@@ -102,6 +102,8 @@ class CquSpiderSpider(scrapy.Spider):
             # 學區
             elif "Location" in title:
                 campus = info.xpath("following-sibling::div[1]//text()").get().strip()
+                if campus == "Online":
+                    campus = None
                     
             # 學費
             elif "First-year fee" in title:
