@@ -54,7 +54,9 @@ class SaveToSharedFilePipeline:
                 except ValueError:
                     adapter[field_name] = None
             else:  # 其他轉 string
-                adapter[field_name] = str(value) if value is not None else value
+                # adapter[field_name] = str(value) if value is not None else value
+                adapter[field_name] = str(value) if value not in [None, ""] else None
+
 
         # 寫入檔案
         file = self.files[spider.name]
