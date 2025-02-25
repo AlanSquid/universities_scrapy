@@ -11,7 +11,7 @@ class MurdochSpiderSpider(scrapy.Spider):
         "https://search.murdoch.edu.au/course-finder/?size=n_36_n&filters%5B0%5D%5Bfield%5D=curriculum_item_type&filters%5B0%5D%5Bvalues%5D%5B0%5D=Course&filters%5B0%5D%5Btype%5D=any&filters%5B1%5D%5Bfield%5D=study_level&filters%5B1%5D%5Bvalues%5D%5B0%5D=Undergraduate&filters%5B1%5D%5Bvalues%5D%5B1%5D=Postgraduate&filters%5B1%5D%5Btype%5D=any"
     ]
     english_requirement_url = "https://www.murdoch.edu.au/study/how-to-apply/entry-requirements/english-proficiency-tests"
-    english_requirement = "IELTS Academic 6.0 (單科不低於6.0)"
+    english_requirement = "IELTS Academic 6.0, with no band score below 6.0"
     courses = []
 
     def start_requests(self):

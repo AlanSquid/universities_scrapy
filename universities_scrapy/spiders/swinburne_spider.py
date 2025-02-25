@@ -131,6 +131,7 @@ class SwinburneSpiderSpider(scrapy.Spider):
         course_name = (await course_name_element.text_content()).strip() if course_name_element else None
         # print("course_name", course_name)
         # print(response.url)
+        
         # 學位
         if "Bachelor of" in course_name:
             degree_level_id = 1
@@ -191,8 +192,8 @@ class SwinburneSpiderSpider(scrapy.Spider):
         #     "#customtabs-item-entry-requirements .contentblock.spacing-vertical-level-1-bottom.international.container .parsys_column.row div:nth-of-type(2) ul li:first-of-type::text"
         # ).get()
         eng_req_e = await page.query_selector("#customtabs-item-entry-requirements .contentblock.spacing-vertical-level-1-bottom.international.container .parsys_column.row div:nth-of-type(2) ul li:first-of-type")
-        eng_req_text = await eng_req_e.text_content()
-        eng_req = self.extract_ielts_requirements(eng_req_text)
+        eng_req_info = await eng_req_e.text_content()
+        eng_req = re.search(r"\d+(\.\d+)?", eng_req_info).group()
         # print("eng_req", eng_req["num"])
         # print("eng_req_info", eng_req["str"])
 
@@ -217,8 +218,8 @@ class SwinburneSpiderSpider(scrapy.Spider):
         university["degree_level_id"] = degree_level_id
         university["min_fee"] = fees
         university["max_fee"] = fees
-        university["eng_req"] = eng_req["num"]
-        university["eng_req_info"] = eng_req["str"]
+        university["eng_req"] = eng_req
+        university["eng_req_info"] = eng_req_info
         university["campus"] = campus
         if duration:
             university["duration"] = re.search(
@@ -229,18 +230,6 @@ class SwinburneSpiderSpider(scrapy.Spider):
 
         self.count += 1
         yield university
-
-    def extract_ielts_requirements(self, text):
-        eng_req = {}
-        overall_band = re.search(r"overall band of (\d\.\d)", text)
-        individual_band = re.search(r"individual band below (\d\.\d)", text)
-        if overall_band and individual_band:
-            eng_req["num"] = float(overall_band.group(1))
-            eng_req["str"] = (
-                f"IELTS {overall_band.group(1)} (單科不低於{individual_band.group(1)})"
-            )
-            return eng_req
-        return None
 
     def closed(self, reason):
         print(f"{self.name} 爬蟲完成!")
