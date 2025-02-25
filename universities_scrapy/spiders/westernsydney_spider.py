@@ -53,18 +53,35 @@ class WesternsydneySpiderSpider(scrapy.Spider):
 
             # 檢查是否提取到 IELTS 資訊
             if ielts_requirement:
-                # 將每個 program 初始化為字典，並包含 eng_req 和 eng_req_info
-                for program in programs:
-                    program = program.replace("M ", "Master of ").replace("B ", "Bachelor of ")
-                    ielts_data[program] = {}
-                    ielts_data[program]["eng_req_info"] = f"IELTS {ielts_requirement}"
-                    
-                    # 如果有整體分數，則提取數字並更新
-                    match = re.search(r'(\d+(\.\d+)?)\s+overall score', ielts_requirement)
-                    if match:
-                        overall_score = match.group(1)  # 提取數字部分
-                        ielts_data[program]["eng_req"] = overall_score
+                if "We only accept test results from one test sitting" in ielts_requirement:
+                    overall_match = re.search(r'minimum overall score of (\d+(\.\d+)?)', ielts_requirement)
+                    component_match = re.search(r'no score in any component of the test is below (\d+(\.\d+)?)', ielts_requirement)
 
+                    overall_score = overall_match.group(1) if overall_match else None
+                    min_component_score = component_match.group(1) if component_match else None
+
+                    for program in programs:
+                        program = program.replace("M ", "Master of ").replace("B ", "Bachelor of ")
+                        ielts_data[program] = {}
+
+                        if overall_score and min_component_score:
+                            ielts_data[program]["eng_req"] = overall_score
+                            ielts_data[program]["eng_req_info"] = f"IELTS {overall_score} overall score, with no component below {min_component_score}"
+                        else:
+                            ielts_data[program]["eng_req_info"] = f"IELTS {ielts_requirement}"
+                else:
+                    # **不包含 "We only accept test results from one test sitting"，直接存原始內容**
+                    # 將每個 program 初始化為字典，並包含 eng_req 和 eng_req_info
+                    for program in programs:
+                        program = program.replace("M ", "Master of ").replace("B ", "Bachelor of ")
+                        ielts_data[program] = {}
+                        ielts_data[program]["eng_req_info"] = f"IELTS {ielts_requirement}"
+                        
+                        # 如果有整體分數，則提取數字並更新
+                        match = re.search(r'(\d+(\.\d+)?)\s+overall score', ielts_requirement)
+                        if match:
+                            overall_score = match.group(1)  # 提取數字部分
+                            ielts_data[program]["eng_req"] = overall_score
         # 存儲或處理爬取的資料
         self.ielts_data = ielts_data  # 存為類別變數，方便查詢
         yield scrapy.Request(
@@ -199,6 +216,6 @@ class WesternsydneySpiderSpider(scrapy.Spider):
 
     #     return {"eng_req":6.5,"eng_req_info":  "IELTS 6.5 overall score, Minimum 6.0 in each subtest"  }
 
-    # def closed(self, reason):    
-    #     print(f'{self.name}爬蟲完成!\n西雪梨大學, 共有 {len(self.all_course_url)} 筆資料\n')
+    def closed(self, reason):    
+        print(f'{self.name}爬蟲完成!\n西雪梨大學, 共有 {len(self.all_course_url)} 筆資料\n')
       

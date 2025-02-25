@@ -96,7 +96,7 @@ class UnisaSpiderSpider(scrapy.Spider):
             if writing: parts.append(f"writing {writing}")
             if speaking: parts.append(f"speaking {speaking}")
             if listening: parts.append(f"listening {listening}")
-            english_requirement = f"{parts[0]} ({'，'.join(parts[1:])})" if len(parts) > 1 else parts[0] if parts else ""
+            english_requirement = f"{parts[0]} ({', '.join(parts[1:])})" if len(parts) > 1 else parts[0] if parts else ""
             english_requirement = english_requirement if english_requirement else None
             eng_req = total
 
