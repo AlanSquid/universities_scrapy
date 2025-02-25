@@ -101,7 +101,7 @@ class UqSpiderSpider(scrapy.Spider):
                 
         
         university = UniversityScrapyItem()
-        university['university_id'] = 21
+        university['university_name'] = "University of Queensland"
         university['name'] = course_name
         university['min_fee'] = tuition_fee
         university['max_fee'] = tuition_fee

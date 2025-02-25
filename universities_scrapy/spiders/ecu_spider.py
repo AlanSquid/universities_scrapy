@@ -137,7 +137,7 @@ class EcuSpiderSpider(scrapy.Spider):
 
             # 把資料存入 university Item
             university = UniversityScrapyItem()
-            university["university_id"] = 40
+            university["university_name"] = "Edith Cowan University"
             university["degree_level_id"] = (
                 1
                 if "Bachelor of" in course_name

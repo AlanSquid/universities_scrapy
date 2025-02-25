@@ -101,7 +101,7 @@ class ScuSpiderSpider(scrapy.Spider):
             degree_level_id = 2
 
         university = UniversityScrapyItem()
-        university['university_id'] = 9
+        university['university_name'] = "Southern Cross University"
         university['name'] = course_name
         university['min_fee'] = min_fee
         university['max_fee'] = max_fee

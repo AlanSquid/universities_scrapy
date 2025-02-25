@@ -140,7 +140,7 @@ class CurtinSpider(scrapy.Spider):
 
    
             university = UniversityScrapyItem()
-            university['university_id'] = 39
+            university['university_name'] = "Curtin University"
             university['name'] = course_name  
             university['min_fee'] = tuition_fee_format
             university['max_fee'] = tuition_fee_format

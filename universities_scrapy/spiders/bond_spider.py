@@ -239,7 +239,7 @@ class BondSpiderSpider(scrapy.Spider):
             eng_req_info=None
     
         university = UniversityScrapyItem()
-        university['university_id'] = 16
+        university['university_name'] = "Bond University"
         university['name'] = course_data["course_name"]
         university['min_fee'] = course_data["year_fee"]
         university['max_fee'] = course_data["year_fee"]

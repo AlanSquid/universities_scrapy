@@ -115,7 +115,7 @@ class UnisaSpiderSpider(scrapy.Spider):
 
 
             university = UniversityScrapyItem()
-            university['university_id'] = 25
+            university['university_name'] = "University of South Australia"
             university['name'] = course_name
             university['min_fee'] = tuition_fee
             university['max_fee'] = tuition_fee

@@ -107,7 +107,7 @@ class FederationSpider(scrapy.Spider):
             fee = None
 
         university = UniversityScrapyItem()
-        university['university_id'] = 37
+        university['university_name'] = "Federation University Australia"
         university['name'] = course_name
         university['min_fee'] = fee
         university['max_fee'] = fee

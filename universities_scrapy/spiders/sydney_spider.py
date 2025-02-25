@@ -102,7 +102,7 @@ class SydneySpiderSpider(scrapy.Spider):
 
                 # 把資料存入 university Item
                 university = UniversityScrapyItem()
-                university["university_id"] = 10
+                university["university_name"] = "University of Sydney"
                 university["name"] = course["name"]
                 university["degree_level_id"] = (
                     1
@@ -237,7 +237,7 @@ class SydneySpiderSpider(scrapy.Spider):
 
             # 把資料存入 university Item
             university = UniversityScrapyItem()
-            university["university_id"] = 10
+            university["university_name"] = "University of Sydney"
             university["name"] = course["name"]
             university["degree_level_id"] = (
                 1

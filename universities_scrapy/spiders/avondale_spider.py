@@ -97,7 +97,7 @@ class AvondaleSpiderSpider(scrapy.Spider):
             eng_req_info = None
 
         university = UniversityScrapyItem()
-        university['university_id'] = 14
+        university['university_name'] = "Avondale University"
         university['name'] = course_name
         university['min_fee'] =self.min_fee
         university['max_fee'] =self.max_fee

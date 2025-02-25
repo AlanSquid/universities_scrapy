@@ -46,7 +46,7 @@ class SaveToSharedFilePipeline:
                     )
                 except ValueError:
                     adapter[field_name] = None
-            elif field_name in {'min_fee', 'max_fee','university_id', 'degree_level_id', 'currency_id', 'course_category_id'}:  # 轉 int
+            elif field_name in {'min_fee', 'max_fee', 'degree_level_id', 'currency_id', 'course_category_id'}:  # 轉 int
                 try:
                     adapter[field_name] = (
                         int(value) if value is not None else value

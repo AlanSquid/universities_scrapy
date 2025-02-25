@@ -147,7 +147,7 @@ class UtsSpider(scrapy.Spider):
         english = self.get_ielts_requirement(response.meta['course_name'],degree_level_id)
 
         university = UniversityScrapyItem()
-        university['university_id'] = 11
+        university['university_name'] = "University of Technology Sydney"
         university['name'] = response.meta['course_name']
         university['min_fee'] = tuition_fee
         university['max_fee'] = tuition_fee

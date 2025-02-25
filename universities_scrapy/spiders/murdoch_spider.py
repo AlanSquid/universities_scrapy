@@ -95,7 +95,7 @@ class MurdochSpiderSpider(scrapy.Spider):
 
         # 存入item
         university = UniversityScrapyItem()
-        university["university_id"] = 41
+        university["university_name"] = "Murdoch University"
         university["degree_level_id"] = (
             1
             if "Bachelor of" in course_name

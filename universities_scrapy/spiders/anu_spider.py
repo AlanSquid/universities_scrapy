@@ -89,7 +89,7 @@ class AnuSpiderSpider(scrapy.Spider):
 
         # 把資料存入 university Item
         university = UniversityScrapyItem()
-        university["university_id"] = 1
+        university["university_name"] = "The Australian National University"
         university["name"] = course_name
         university["degree_level_id"] = degree_level_id
         university["course_url"] = response.url

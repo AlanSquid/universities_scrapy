@@ -117,7 +117,7 @@ class JcuSpiderSpider(scrapy.Spider):
         english = self.english_requirement(english_level)
 
         university = UniversityScrapyItem()
-        university['university_id'] = 19
+        university['university_name'] = "James Cook University"
         university['name'] = course_name  
         university['min_fee'] = fee
         university['max_fee'] = fee

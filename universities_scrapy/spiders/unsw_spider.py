@@ -117,7 +117,7 @@ class UnswSpiderSpider(scrapy.Spider):
             #     print(f"{course_name}的英文格式不匹配，無法解析。{ielts_requirement}")
 
         university = UniversityScrapyItem()
-        university['university_id'] = 7
+        university['university_name'] = "University of New South Wales"
         university['name'] = course_name
         university['min_fee'] = tuition_fee
         university['max_fee'] = tuition_fee

@@ -213,7 +213,7 @@ class SwinburneSpiderSpider(scrapy.Spider):
             
         # 把資料存入 university Item
         university = UniversityScrapyItem()
-        university["university_id"] = 33
+        university["university_name"] = "Swinburne University of Technology"
         university["name"] = course_name
         university["degree_level_id"] = degree_level_id
         university["min_fee"] = fees

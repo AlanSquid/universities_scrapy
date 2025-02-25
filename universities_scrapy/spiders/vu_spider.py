@@ -218,7 +218,7 @@ class VuSpiderSpider(scrapy.Spider):
             semester_tuition_fee = int(match.group(1).replace(",", ""))
         tuition_fee = semester_tuition_fee * 2
         university = UniversityScrapyItem()
-        university['university_id'] = 36
+        university['university_name'] = "Victoria University"
         university['name'] = course_name
         university['min_fee'] = tuition_fee
         university['max_fee'] = tuition_fee

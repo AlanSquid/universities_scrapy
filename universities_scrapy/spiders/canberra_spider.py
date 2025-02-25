@@ -94,7 +94,7 @@ class CanberraSpiderSpider(scrapy.Spider):
         english = self.english_requirement(language_modal)
 
         university = UniversityScrapyItem()
-        university['university_id'] = 2
+        university['university_name'] = "University of Canberra"
         university['name'] = course_name  
         university['min_fee'] = tuition_fee
         university['max_fee'] = tuition_fee

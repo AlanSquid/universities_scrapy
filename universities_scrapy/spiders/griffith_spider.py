@@ -119,7 +119,7 @@ class GriffithSpider(scrapy.Spider):
 
                 # 把資料存入 university Item
                 university = UniversityScrapyItem()
-                university['university_id'] = 18
+                university['university_name'] = "Griffith University"
                 university['name'] = course_name
                 university['min_fee'] = tuition_fee
                 university['max_fee'] = tuition_fee

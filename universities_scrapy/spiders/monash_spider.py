@@ -203,7 +203,7 @@ class MonashSpiderSpider(scrapy.Spider):
                 duration = re.sub(r"\s*See entry requirements[\s\u200b]*\.*", "", duration).strip()
 
         university = UniversityScrapyItem()
-        university['university_id'] = 31
+        university['university_name'] = "Monash University"
         university['name'] = course_name
         university['min_fee'] = min_fee if min_fee is not None else tuition_fee
         university['max_fee'] = max_fee if max_fee is not None else tuition_fee

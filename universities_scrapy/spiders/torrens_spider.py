@@ -81,7 +81,7 @@ class TorrensSpiderSpider(scrapy.Spider):
 
             # 把資料存入 university Item
             university = UniversityScrapyItem()
-            university["university_id"] = 27
+            university["university_name"] = "Torrens University Australia"
             university["name"] = course_name
             university["degree_level_id"] = 1 if "Bachelor" in course_name else 2
             university["min_fee"] = fees
@@ -174,7 +174,7 @@ class TorrensSpiderSpider(scrapy.Spider):
 
                 # 把資料存入 university Item
                 university = UniversityScrapyItem()
-                university["university_id"] = 27
+                university["university_name"] = "Torrens University Australia"
                 university["name"] = course_name
                 university["degree_level_id"] = 1 if "Bachelor" in course_name else 2
                 university["min_fee"] = fees

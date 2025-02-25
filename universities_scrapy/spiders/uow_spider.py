@@ -189,7 +189,7 @@ class UowSpider(scrapy.Spider):
             degree_level_id = 2
 
         university = UniversityScrapyItem()
-        university['university_id'] = 13
+        university['university_name'] = "University of Wollongong"
         university['name'] = course_name
         university['min_fee'] = min_fee
         university['max_fee'] = max_fee

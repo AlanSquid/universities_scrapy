@@ -76,7 +76,7 @@ class RmitSpiderSpider(scrapy.Spider):
             duration=None
 
         university = UniversityScrapyItem()
-        university['university_id'] = 32
+        university['university_name'] = "RMIT University"
         university['name'] = course_name
         university['min_fee'] = tuition_fee
         university['max_fee'] = tuition_fee            

@@ -160,7 +160,7 @@ class UnisqSpiderSpider(scrapy.Spider):
 
 
         university = UniversityScrapyItem()
-        university['university_id'] = 29
+        university['university_name'] = "University of Southern Queensland"
         university['name'] = course_name
         university['min_fee'] = fee_value
         university['max_fee'] = fee_value

@@ -143,7 +143,7 @@ class UtasSpiderSpider(scrapy.Spider):
             total_score = self.eng_req
 
         university = UniversityScrapyItem()
-        university['university_id'] = 29
+        university['university_name'] = "University of Tasmania"
         university['name'] = course_name
         university['min_fee'] = total_fee
         university['max_fee'] = total_fee

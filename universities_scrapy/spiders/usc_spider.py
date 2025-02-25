@@ -192,7 +192,7 @@ class UscSpiderSpider(scrapy.Spider):
         course_name = ' '.join([t.strip() for t in title if t.strip()])
         english = self.get_ielts_requirement(course_name, response.meta["degree_level_id"])
         university = UniversityScrapyItem()
-        university['university_id'] = 22
+        university['university_name'] = "University of the Sunshine Coast"
         university['name'] = course_name
         university['min_fee'] = response.meta["tuition_fee"]
         university['max_fee'] = response.meta["tuition_fee"]

@@ -229,7 +229,7 @@ class UwaSpider(scrapy.Spider):
        
         # 把資料存入 university Item
         university = UniversityScrapyItem()
-        university['university_id'] = 42
+        university['university_name'] = "University of Western Australia"
         university['name'] = response.meta.get('course_name')
         university['min_fee'] = fee_2025
         university['max_fee'] = fee_2025

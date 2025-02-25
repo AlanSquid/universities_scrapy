@@ -9,7 +9,7 @@ class BookScrapyItem(scrapy.Item):
     price = scrapy.Field()
     
 class UniversityScrapyItem(scrapy.Item):
-    university_id = scrapy.Field() #大學id
+    university_name = scrapy.Field() #大學id
     name = scrapy.Field() # 課程(科系)名稱
     min_fee = scrapy.Field() # 年度學費 區間最小值 如果沒有區間，只需要填min_fee
     max_fee = scrapy.Field() # 年度學費 區間最大值

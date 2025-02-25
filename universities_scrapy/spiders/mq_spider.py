@@ -115,7 +115,7 @@ class MqSpiderSpider(scrapy.Spider):
         campus = ", ".join(locations)
 
         university = UniversityScrapyItem()
-        university['university_id'] = 5
+        university['university_name'] = "Macquarie University"
         university['name'] = response.meta["course_name"]  
         university['min_fee'] = international_fee
         university['max_fee'] = international_fee

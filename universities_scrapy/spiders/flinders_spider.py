@@ -117,7 +117,7 @@ class FlindersSpiderSpider(scrapy.Spider):
 
         # 把資料存入 university Item
         university = UniversityScrapyItem()
-        university["university_id"] = 26
+        university["university_name"] = "Flinders University"
         university["name"] = course_name
         university["degree_level_id"] = response.meta["degree_id"]
         university["course_url"] = response.url
@@ -228,7 +228,7 @@ class FlindersSpiderSpider(scrapy.Spider):
 
                 # 把資料存入 university Item
                 university = UniversityScrapyItem()
-                university["university_id"] = 26
+                university["university_name"] = "Flinders University"
                 university["name"] = course_name
                 university["degree_level_id"] = 2
                 university["course_url"] = response.url

@@ -138,7 +138,7 @@ class UnimelbSpiderSpider(scrapy.Spider):
                 
                 # 把資料存入 university Item
                 university = UniversityScrapyItem()
-                university["university_id"] = 30
+                university["university_name"] = "University of Melbourne"
                 university["name"] = course_name
                 university["degree_level_id"] = 1 if "Bachelor" in course_name else 2
                 university["min_fee"] = min_fee

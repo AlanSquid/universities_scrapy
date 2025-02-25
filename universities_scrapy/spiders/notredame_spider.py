@@ -191,7 +191,7 @@ class NotredameSpiderSpider(scrapy.Spider):
         english = self.get_ielts_requirement(course_name, degree_level_id)
         
         university = UniversityScrapyItem()
-        university['university_id'] = 43
+        university['university_name'] = "University of Notre Dame Australia"
         university['name'] = course_name
         university['min_fee'] =tuition_fee
         university['max_fee'] =tuition_fee
@@ -231,7 +231,7 @@ class NotredameSpiderSpider(scrapy.Spider):
             degree_level_id = 2
         english = self.get_ielts_requirement(response.meta["course_name"], degree_level_id)
         university = UniversityScrapyItem()
-        university['university_id'] = 43
+        university['university_name'] = "University of Notre Dame Australia"
         university['name'] = response.meta["course_name"]
         university['min_fee'] =tuition_fee
         university['max_fee'] =tuition_fee

@@ -156,7 +156,7 @@ class QutSpiderSpider(scrapy.Spider):
         if tuition_fee and eng_req:
             self.seen_urls.add(response.url)
             university = UniversityScrapyItem()
-            university['university_id'] = 20
+            university['university_name'] = "Queensland University of Technology"
             university['name'] = course_name
             university['min_fee'] = tuition_fee
             university['max_fee'] = tuition_fee

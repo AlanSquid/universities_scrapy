@@ -133,7 +133,7 @@ class CsuSpiderSpider(scrapy.Spider):
         
         # 把資料存入 university Item
         university = UniversityScrapyItem()
-        university["university_id"] = 4
+        university["university_name"] = "Charles Sturt University"
         university["name"] = course_name
         university["degree_level_id"] = 1 if "Bachelor" in course_name else 2
         university["min_fee"] = fees

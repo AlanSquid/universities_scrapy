@@ -85,7 +85,7 @@ class CduSpider(scrapy.Spider):
                     fee = float(annual_fee.replace(',', ''))
 
         university = UniversityScrapyItem()
-        university['university_id'] = 15
+        university['university_name'] = "Charles Darwin University"
         university['name'] = course_name
         university['min_fee'] = fee
         university['max_fee'] = fee

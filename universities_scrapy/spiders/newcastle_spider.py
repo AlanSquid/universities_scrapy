@@ -110,7 +110,7 @@ class NewcastleSpiderSpider(scrapy.Spider):
 
         # 把資料存入 university Item
         university = UniversityScrapyItem()
-        university["university_id"] = 8
+        university["university_name"] = "University of Newcastle"
         university["name"] = course_name
         university["degree_level_id"] = (
             1
@@ -153,7 +153,7 @@ class NewcastleSpiderSpider(scrapy.Spider):
 
         # 把資料存入 university Item
         university = UniversityScrapyItem()
-        university["university_id"] = 8
+        university["university_name"] = "University of Newcastle"
         university["name"] = course_name
         university["degree_level_id"] = (
             1
