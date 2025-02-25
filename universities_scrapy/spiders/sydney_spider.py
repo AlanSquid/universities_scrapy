@@ -112,10 +112,8 @@ class SydneySpiderSpider(scrapy.Spider):
                 university["course_url"] = course["url"]
                 university["min_fee"] = course_detail["tuition_fee"]
                 university["max_fee"] = course_detail["tuition_fee"]
-                university["eng_req"] = re.search(
-                    r"\d+(\.\d+)?", course_detail["english_requirement"]
-                ).group()
-                university["eng_req_info"] = course_detail["english_requirement"]
+                university["eng_req"] = course_detail["eng_req"]
+                university["eng_req_info"] = course_detail["eng_req_info"]
                 university["duration"] = re.search(
                     r"\d+(\.\d+)?", course_detail["duration"]
                 ).group()
@@ -209,7 +207,8 @@ class SydneySpiderSpider(scrapy.Spider):
                 pass
 
             # 丟給scrapy解析
-            english_requirement = None
+            eng_req = None
+            eng_req_info = None
             admissions_page = scrapy.Selector(text=driver.page_source)
 
             english_requirements_list = admissions_page.css(
@@ -221,13 +220,10 @@ class SydneySpiderSpider(scrapy.Spider):
                 ).get()
                 # 找IELTS的英文門檻
                 if title and "IELTS" in title:
-                    english_requirement_raw = english_requirement_item.css(
+                    eng_req_info = english_requirement_item.css(
                         "td:nth-child(2)::text"
                     ).get()
-                    # 格式化文字
-                    english_requirement = self.extract_ielts_requirement_str(
-                        english_requirement_raw
-                    )
+                    eng_req = re.search(r"\d+(\.\d+)?", eng_req_info).group()
                     break
 
             # 輸出資訊
@@ -251,12 +247,8 @@ class SydneySpiderSpider(scrapy.Spider):
             university["course_url"] = course["url"]
             university["min_fee"] = tuition_fee
             university["max_fee"] = tuition_fee
-            university["eng_req"] = (
-                re.search(r"\d+", english_requirement).group()
-                if english_requirement and re.search(r"\d+", english_requirement)
-                else None
-            )
-            university["eng_req_info"] = english_requirement
+            university["eng_req"] = eng_req
+            university["eng_req_info"] = eng_req_info
             university["duration"] = (
                 re.search(r"\d+", duration).group()
                 if re.search(r"\d+", duration)
@@ -341,21 +333,6 @@ class SydneySpiderSpider(scrapy.Spider):
             )
         )
 
-    # 提取IELTS英文門檻
-    def extract_ielts_requirement_str(self, ielts_string):
-        # 使用正則表達式進行替換
-        pattern = r"A minimum result of (\d+\.\d+) overall and a minimum result of (\d+\.\d+) in each band"
-        match = re.search(pattern, ielts_string)
-
-        if match:
-            if match.group(2):
-                replacement = f"IELTS {match.group(1)} (單科不低於{match.group(2)})"
-            else:
-                replacement = f"IELTS {match.group(1)}"
-        else:
-            replacement = ielts_string  # 如果沒有匹配到，返回原始字符串
-
-        return replacement
 
     # 爬不到資訊欄例外處理
     def except_course_process(self, driver):
@@ -382,13 +359,11 @@ class SydneySpiderSpider(scrapy.Spider):
                 tuition_fee = match.group(1).replace(",", "")
 
         # 抓取英文門檻
-        english_requirement_raw = page.css(
+        eng_req_info = page.css(
             ".b-paragraph.b-box--slightly-transparent.b-box--compact.b-box--mid-grey.b-component--tighter::text"
         ).get()
-        english_requirement = self.extract_ielts_requirement_str(
-            english_requirement_raw
-        )
-
+        eng_req = re.search(r"\d+(\.\d+)?", eng_req_info).group()
+        
         course_details = page.css(
             ".b-box.b-box--bordered-thin-grey.b-details-panel__box::text"
         ).getall()
@@ -412,7 +387,8 @@ class SydneySpiderSpider(scrapy.Spider):
 
         return {
             "tuition_fee": tuition_fee,
-            "english_requirement": english_requirement,
+            "eng_req": eng_req,
+            "eng_req_info": eng_req_info,
             "location": location,
             "duration": duration,
         }
