@@ -153,11 +153,12 @@ class FlindersSpiderSpider(scrapy.Spider):
             "gray_dark_container",
             "gray_darker_container",
             "international_grey_container",
+            "domestic_grey_container"
         ]
 
         target_course_section = []
         for course_section in course_sections:
-            first_div_class = course_section.css("div > div::attr(class)").get()
+            first_div_class = course_section.css("div > div::attr(class)").get().strip()
             if any(keyword in first_div_class for keyword in classname_keywords):
                 target_course_section = course_section
                 break
