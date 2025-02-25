@@ -6,6 +6,9 @@ class UtasSpiderSpider(scrapy.Spider):
     name = "utas_spider"
     allowed_domains = ["www.utas.edu.au"]
     start_urls = ["https://www.utas.edu.au/search?num_ranks=50&f.Course+Level%7CcourseLevel=UG&f.Course+Level%7CcourseLevel=PG&f.Course+Year%7CcourseYear=2025&collection=utas%7Esp-search&f.Tabs%7Cutas%7Eds-handbook-courses=Courses"]
+    eng_req_url = "https://www.utas.edu.au/study/apply/admission-requirements/english-language-requirements"
+    eng_req_info = "IELTS (Academic) 5.5 (no individual band less than 5.0)"
+    eng_req = 5.5
     all_course_url = []
     num = 0
     except_count = 0
@@ -31,8 +34,7 @@ class UtasSpiderSpider(scrapy.Spider):
         if next_page_button:
             next_page_url = response.urljoin(next_page_button)
             yield response.follow(next_page_url, self.parse) 
-        else:
-            print("沒有下一頁，頁數",self.num)
+
     
     def page_parse(self, response):
         course_name = response.css("h1::text").get()
@@ -133,6 +135,11 @@ class UtasSpiderSpider(scrapy.Spider):
                 eng_req_info = re.sub(r',?\s*or a PTE Academic score of [^,]+', '', eng_req_info)
                 total_score = float(ielts_match.group(2))
 
+        # 如果找不到英文門檻，寫學校最低英文門檻
+        if eng_req_info is None:
+            eng_req_info = self.eng_req_info
+            total_score = self.eng_req
+
         university = UniversityScrapyItem()
         university['university_id'] = 29
         university['name'] = course_name
@@ -145,9 +152,10 @@ class UtasSpiderSpider(scrapy.Spider):
         university['duration_info'] = duration_info
         university['degree_level_id'] = degree_level_id
         university['course_url'] = response.url
+        university['eng_req_url'] = self.eng_req_url
 
         yield university
 
     def closed(self, reason):    
-        print(f'{self.name}\n塔斯馬尼亞大學，共{len(self.all_course_url) - self.except_count} 筆資料(已扣除不開放申請)')
-        print(f'有 {self.except_count} 筆目前不開放申請\n')
+        print(f'{self.name}爬蟲完成!\n塔斯馬尼亞大學，共{len(self.all_course_url) - self.except_count} 筆資料(已扣除不適用國際學生)')
+        print(f'有 {self.except_count} 筆不適用於國際學生\n')
