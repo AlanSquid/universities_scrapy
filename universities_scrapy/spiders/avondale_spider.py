@@ -112,7 +112,7 @@ class AvondaleSpiderSpider(scrapy.Spider):
 
         yield university
     def closed(self, reason):    
-        print(f'{self.name}爬蟲完畢\n亞芳代爾大學，共 {len(self.all_course_url) - self.except_count} 筆資料(已扣除不開放申請)')
+        print(f'{self.name}爬蟲完畢\n亞芳代爾大學，共 {len(self.all_course_url) - self.except_count} 筆資料(已扣除不開放申請)\n')
 
     def url_transfer_to_scrapy_response(self, url):
         response = self.scraper.get(url) # response 會包含網站的 HTML 內容，以及其他有關這次請求的元數據（如狀態碼、請求頭等）。

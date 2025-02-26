@@ -115,5 +115,4 @@ class UneSpiderSpider(scrapy.Spider):
 
     def closed(self, reason):
         print(f"{self.name} 爬蟲完成!")
-        print(f"新英格蘭大學, 共有 {len(self.courses)} 筆資料")
-        print("\n")
+        print(f"新英格蘭大學, 共有 {len(self.courses)} 筆資料\n")

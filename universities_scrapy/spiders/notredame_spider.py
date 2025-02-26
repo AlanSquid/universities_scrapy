@@ -322,4 +322,4 @@ class NotredameSpiderSpider(scrapy.Spider):
 
 
     def closed(self, reason):    
-        print(f'{self.name}爬蟲完畢\n澳洲聖母大學，共 {len(self.all_course_url) - self.except_count} 筆資料(已扣除不開放申請)')
+        print(f'{self.name}爬蟲完畢\n澳洲聖母大學，共 {len(self.all_course_url) - self.except_count} 筆資料(已扣除不開放申請)\n')

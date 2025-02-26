@@ -186,4 +186,4 @@ class UnimelbSpiderSpider(scrapy.Spider):
 
     def closed(self, reason):
         print(f"{self.name}爬蟲完成!")
-        print(f"墨爾本大學, 共有 {self.course_count } 筆資料")
+        print(f"墨爾本大學, 共有 {self.course_count } 筆資料\n")

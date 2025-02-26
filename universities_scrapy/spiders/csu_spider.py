@@ -152,5 +152,4 @@ class CsuSpiderSpider(scrapy.Spider):
         print(
             f"查爾斯史都華大學, 共有 {len(self.courses) - self.exclude_count} 筆資料(已排除)"
         )
-        print(f"排除 {self.exclude_count} 筆資料")
-        print("\n")
+        print(f"排除 {self.exclude_count} 筆資料\n")

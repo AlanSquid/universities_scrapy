@@ -174,7 +174,7 @@ class DeakinSpiderSpider(scrapy.Spider):
        
 
     def close(self):
-        print(f"迪肯大學({self.name})總共{len(self.all_course_url)}個科系")
+        print(f"迪肯大學({self.name})總共{len(self.all_course_url)}個科系\n")
         # end_time = time.time()
         # elapsed_time = end_time - self.start_time
         # print(f'爬蟲時間: {elapsed_time:.2f}', '秒')

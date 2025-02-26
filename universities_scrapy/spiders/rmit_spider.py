@@ -90,7 +90,7 @@ class RmitSpiderSpider(scrapy.Spider):
         yield university
    
     def close(self):
-        print(f'{self.name}爬蟲完成!\n墨爾本皇家理工大學, 共有 {len(self.all_course_url) - self.except_count} 筆資料')
+        print(f'{self.name}爬蟲完成!\n墨爾本皇家理工大學, 共有 {len(self.all_course_url) - self.except_count} 筆資料\n')
         # end_time = time.time()
         # elapsed_time = end_time - self.start_time
         # print(f'爬蟲時間: {elapsed_time:.2f}', '秒')

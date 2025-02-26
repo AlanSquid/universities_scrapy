@@ -122,4 +122,4 @@ class FederationSpider(scrapy.Spider):
         yield university
 
     def closed(self, reason):    
-        print(f'{self.name}爬蟲完畢\n澳大利亞聯邦大學，共 {len(self.all_course_url) } 筆資料')
+        print(f'{self.name}爬蟲完畢\n澳大利亞聯邦大學，共 {len(self.all_course_url) } 筆資料\n')

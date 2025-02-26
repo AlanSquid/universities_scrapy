@@ -20,6 +20,7 @@ class TorrensSpiderSpider(scrapy.Spider):
     #     "(Honours)",
     #     "/",
     # ]
+    course_count = 0
     scraper = cloudscraper.create_scraper()
 
     def parse(self, response):
@@ -92,7 +93,7 @@ class TorrensSpiderSpider(scrapy.Spider):
             university["duration"] = duration
             university["duration_info"] = duration_info
             university["course_url"] = response.url
-
+            self.course_count += 1
             yield university
 
         else:
@@ -185,7 +186,7 @@ class TorrensSpiderSpider(scrapy.Spider):
                 university["duration"] = duration
                 university["duration_info"] = duration_info
                 university["course_url"] = response.url
-
+                self.course_count += 1
                 yield university
 
     def url_transfer_to_scrapy_response(self, url):
@@ -298,7 +299,5 @@ class TorrensSpiderSpider(scrapy.Spider):
         return None
 
     def closed(self, reason):
-        print(f"{self.name} 爬蟲完成!")
-        # print(f"澳洲托倫斯大學, 共有 {len(self.courses) - self.exclude_count} 筆資料(已排除)")
-        # print(f"排除 {self.exclude_count} 筆資料")
-        print("\n")
+        print(f"{self.name} 爬蟲完成!\n")
+        print(f"澳洲托倫斯大學, 共有 {self.course_count} 筆資料\n")
