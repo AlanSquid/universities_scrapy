@@ -98,7 +98,7 @@ class LatrobeSpiderSpider(scrapy.Spider):
                 duration = None
             location = page_content.xpath('//table//tr[th[contains(text(), "Available locations")]]/td/text()').get()
             location = location.strip() if location else None
-            if location.lower() == "online":
+            if location and location.lower() == "online":
                 self.except_count += 1
                 return
 

@@ -130,7 +130,7 @@ class QutSpiderSpider(scrapy.Spider):
         locations = response.css('ul[data-course-map-key="quickBoxDeliveryINT"] li::text').getall()
         location = ', '.join(locations)
 
-        if location.lower() == "online":
+        if location and location.lower() == "online":
             self.except_count += 1
             return
 

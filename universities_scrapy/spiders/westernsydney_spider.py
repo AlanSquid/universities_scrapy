@@ -173,7 +173,7 @@ class WesternsydneySpiderSpider(scrapy.Spider):
         # 移除包含 'UAC' 的內容
         campuses = [re.sub(r'\s*UAC.*', '', campus).strip() for campus in campuses]
         location = ', '.join(campus for campus in campuses if campus)
-        if location.lower() == "online":
+        if location and location.lower() == "online":
             self.except_count += 1
             return
         university = UniversityScrapyItem()
