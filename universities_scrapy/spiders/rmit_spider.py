@@ -60,7 +60,7 @@ class RmitSpiderSpider(scrapy.Spider):
         locations = response.xpath('//dt[text()=" Location:"]/following-sibling::dd[@class="desc qf-int-location"]/text()').getall()
         locations = [all_location.strip() for all_location in locations]
         location = ', '.join(locations)
-        if location.lower() == "online":
+        if location and location.lower() == "online":
             self.except_count += 1
             return
         # 學制(期間)

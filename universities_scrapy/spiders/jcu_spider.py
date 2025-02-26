@@ -92,7 +92,7 @@ class JcuSpiderSpider(scrapy.Spider):
         campuses = response.css('.course-fast-facts__location-list-item a.course-fast-facts__location-link::text').getall()
         campuses = [campus.strip() for campus in campuses if campus.strip()]
         location = ', '.join(campuses)
-        if location.lower() == "online":
+        if location and location.lower() == "online":
             self.except_count += 1
             return
         duration_info = response.css(".course-fast-facts__tile.fast-facts-duration p::text").get()

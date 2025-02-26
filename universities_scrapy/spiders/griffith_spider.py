@@ -68,7 +68,7 @@ class GriffithSpider(scrapy.Spider):
                     
                 location_list = course_page.css("dt.info-group-title.campus + div dd::text").getall()
                 location_format = ', '.join([location.strip() for location in location_list]) if location_list else None
-                if location_format.lower() == "online":
+                if location_format and location_format.lower() == "online":
                     self.except_count += 1
                     continue                
         

@@ -66,7 +66,7 @@ class ScuSpiderSpider(scrapy.Spider):
 
         campus = int_course_info.xpath("//li[@class='course-snapshot__item'][.//h4[contains(text(), 'Location')]]//div[@class='course-snapshot__text']/p/text()").get()
         campus = campus.strip()  if campus else None
-        if campus.lower() == "online":
+        if campus and campus.lower() == "online":
             self.except_count += 1
             return
 

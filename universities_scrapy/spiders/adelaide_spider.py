@@ -59,7 +59,7 @@ class AdelaideSpider(scrapy.Spider):
 
         locations = [loc.strip() for loc in locations if loc.strip()]
         locations = ', '.join(locations) if locations else None
-        if locations.lower() == "online":
+        if locations and locations.lower() == "online":
             self.except_count += 1
             return        
         # 取得學費

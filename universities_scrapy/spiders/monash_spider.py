@@ -147,8 +147,8 @@ class MonashSpiderSpider(scrapy.Spider):
             locations.append(clean_item.strip())
 
         location = ', '.join([d.strip() for d in locations])
-            # 防止空字串
-        if location.lower() == "online":
+
+        if location and location.lower() == "online":
             self.except_count += 1
             return
 
@@ -196,7 +196,6 @@ class MonashSpiderSpider(scrapy.Spider):
                 duration_detail = months / 12  # 轉換成年數
             else:
                 duration_detail = None  # 若無匹配，返回 None            
-                print(duration)
         if duration:
             if "See entry requirements" in duration:
                 # duration = duration.replace("See entry requirements,", "").strip()
@@ -226,7 +225,7 @@ class MonashSpiderSpider(scrapy.Spider):
         return scrapy_response
     
     def close(self):
-        print(f'\n{self.name}爬蟲完畢！\n蒙納許大學，共{len(self.all_course_url) - self.except_count}筆資料')
+        print(f'{self.name}爬蟲完畢！\n蒙納許大學，共{len(self.all_course_url) - self.except_count}筆資料\n')
         # print(f'有{self.non_international_num}個科系，不提供給國際生\n')
         # end_time = time.time()
         # elapsed_time = end_time - self.start_time
