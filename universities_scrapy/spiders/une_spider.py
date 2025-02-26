@@ -30,8 +30,9 @@ class UneSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         cards = response.css(
-            'div[data-once="ajax-pager une-programs"] .view-content .views-row'
+            'div[data-once="une-programs ajax-pager"] .view-content .views-row'
         )
+
         for card in cards:
             degree_type = card.css("article::attr(data-types)").get()
             location_type = card.css("article::attr(data-location)").get()
@@ -57,7 +58,6 @@ class UneSpiderSpider(scrapy.Spider):
                 course_url = response.urljoin(link)
                 
                 self.courses.append({"campus": campus, "url": course_url, "degree": degree})
-
         for course in self.courses:
             yield scrapy.Request(
                 course["url"],
@@ -67,7 +67,7 @@ class UneSpiderSpider(scrapy.Spider):
             )
 
     def parse_course(self, response):
-        course_name = response.css("h1.page-title span::text").get()
+        course_name = response.css("h1.page-title::text").get().replace('\n', '').strip()
         campus = response.meta["campus"]
         degree_level_id = response.meta["degree"]
         fee_url = None
@@ -95,6 +95,7 @@ class UneSpiderSpider(scrapy.Spider):
             elif "Clinical Anatomy" in course_name:
                 fee = 29250 + 26910
                 fee_url = "https://www.une.edu/sfs/graduate/costs/2024-2025-master-science-clinical-anatomy-costs"
+
             
         # 把資料存入 university Item
         university = UniversityScrapyItem()
@@ -106,6 +107,7 @@ class UneSpiderSpider(scrapy.Spider):
         university["eng_req"] = 6.0
         university["eng_req_info"] = 'Overall Band 6.0 or higher'
         university["campus"] = campus
+        university["course_url"] = response.url
         university["fee_detail_url"] = fee_url
         # 沒有學制資訊
         # university["duration"] = None

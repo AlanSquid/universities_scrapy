@@ -23,7 +23,7 @@ class ScuSpiderSpider(scrapy.Spider):
         cards = response.css("div.search-content__block div.search-content__block-item")
         for card in cards:
             course_name = card.css("h3.course-card__title a::text").get()
-            skip_keywords = ["Doctor of", "Honours", "Graduate Certificate", "Diploma", "Juris Doctor", "MBA"]
+            skip_keywords = ["Doctor of", "Honours", "Graduate Certificate", "Diploma", "Juris Doctor", "MBA", "Associate"]
             keywords = ["Bachelor of", "Master of"]
             if not course_name or any(keyword in course_name for keyword in skip_keywords) or sum(course_name.count(keyword) for keyword in keywords) >= 2 or sum(course_name.count(keyword) for keyword in keywords) < 0:
                 # print('跳過:',course_name)
